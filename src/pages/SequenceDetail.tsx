@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { 
   Music, 
   Download, 
@@ -10,73 +10,129 @@ import {
   Calendar, 
   MapPin,
   ExternalLink,
-  Heart
+  Heart,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from '@/components/ui/breadcrumb';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import { mockSequences } from '@/data/mockSequences';
+import { Sequence } from '@/types/sequence';
 
-// Mock data for a single sequence
-const mockSequence = {
-  id: '1',
-  title: 'Winter Wonderland Mega Mix',
-  displayName: 'Johnson Family Lights',
-  displayId: 'display-1',
-  imageUrl: 'https://images.unsplash.com/photo-1482350325005-eda5e677279b?q=80&w=1080',
-  videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Example YouTube embed URL
-  price: 15.99,
-  rating: 4.8,
-  downloads: 243,
-  songCount: 3,
-  software: 'xLights',
-  description: 'A spectacular synchronized light show featuring three classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
-  createdAt: '2023-11-15',
-  seller: {
-    id: 'user-1',
-    name: 'Robert Johnson',
-    avatar: 'https://i.pravatar.cc/150?img=68',
-    rating: 4.9,
-    sequencesCount: 12,
-    joinedDate: 'November 2021'
-  },
+// Extended sequence type with additional details
+interface SequenceDetail extends Sequence {
+  videoUrl: string;
+  description: string;
+  createdAt: string;
   display: {
-    id: 'display-1',
-    title: 'Johnson Family Lights',
-    location: 'Seattle, WA',
-    schedule: 'Nov 25 - Jan 5 • 5-10pm',
-    rating: 4.9
-  }
+    id: string;
+    title: string;
+    location: string;
+    schedule: string;
+    rating: number;
+  };
+  seller: {
+    id: string;
+    name: string;
+    avatar: string;
+    rating: number;
+    sequencesCount: number;
+    joinedDate: string;
+  };
+}
+
+// Dummy function to get related sequences - in a real app this would fetch from the backend
+const getRelatedSequences = (currentId: string, displayName: string): Sequence[] => {
+  return mockSequences
+    .filter(seq => seq.id !== currentId && seq.displayName === displayName)
+    .slice(0, 2);
 };
 
-// Mock related sequences from the same display
-const mockRelatedSequences = [
-  {
-    id: '2',
-    title: 'Carol of the Bells',
-    imageUrl: 'https://images.unsplash.com/photo-1573116456454-e02329be9ae2?q=80&w=1080',
-    price: 12.99,
-    software: 'xLights'
-  },
-  {
-    id: '3',
-    title: 'Silent Night Remix',
-    imageUrl: 'https://images.unsplash.com/photo-1542262867-c4b517b92db8?q=80&w=1080',
-    price: 0,
-    software: 'xLights'
-  }
-];
-
-const SequenceDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [isFavorite, setIsFavorite] = useState(false);
+// Dummy function to get sequence details - in a real app this would fetch from the backend
+const getSequenceDetails = (id: string): SequenceDetail | undefined => {
+  const baseSequence = mockSequences.find(seq => seq.id === id);
   
-  // In a real app, we would fetch the sequence data based on the id
-  // const sequence = useQuery(['sequence', id], () => fetchSequence(id))
-  const sequence = mockSequence; // For now using mock data
+  if (!baseSequence) return undefined;
+  
+  // Add additional details to the base sequence
+  return {
+    ...baseSequence,
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Example YouTube embed URL
+    description: 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
+    createdAt: 'November 15, 2023',
+    display: {
+      id: `display-${baseSequence.id}`,
+      title: baseSequence.displayName,
+      location: 'Seattle, WA',
+      schedule: 'Nov 25 - Jan 5 • 5-10pm',
+      rating: 4.9
+    },
+    seller: {
+      id: `user-${baseSequence.id}`,
+      name: `${baseSequence.displayName} Owner`,
+      avatar: 'https://i.pravatar.cc/150?img=68',
+      rating: 4.9,
+      sequencesCount: 12,
+      joinedDate: 'November 2021'
+    }
+  };
+};
+
+const SequenceDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [sequence, setSequence] = useState<SequenceDetail | undefined>(undefined);
+  const [relatedSequences, setRelatedSequences] = useState<Sequence[]>([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (id) {
+      // In a real app, you would fetch the data from an API
+      const sequenceData = getSequenceDetails(id);
+      setSequence(sequenceData);
+      
+      if (sequenceData) {
+        const related = getRelatedSequences(id, sequenceData.displayName);
+        setRelatedSequences(related);
+      }
+      
+      setIsLoading(false);
+    }
+  }, [id]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="animate-pulse text-xl">Loading sequence details...</div>
+      </div>
+    );
+  }
+  
+  if (!sequence) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-xl">Sequence not found</div>
+        <Link to="/">
+          <Button className="mt-4">
+            <ArrowLeft className="mr-2" size={16} />
+            Return Home
+          </Button>
+        </Link>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -85,9 +141,21 @@ const SequenceDetail = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
           {/* Breadcrumbs */}
-          <div className="text-sm text-muted-foreground mb-6">
-            <span>Home</span> / <span>Sequences</span> / <span className="text-foreground">{sequence.title}</span>
-          </div>
+          <Breadcrumb className="mb-6">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink as={Link} to="/sequences">Sequences</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{sequence.title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left column - Video and details */}
@@ -278,40 +346,44 @@ const SequenceDetail = () => {
               </Card>
               
               {/* Related Sequences */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">More from this Display</h3>
-                  
-                  <div className="space-y-4">
-                    {mockRelatedSequences.map(seq => (
-                      <div key={seq.id} className="flex items-center space-x-3">
-                        <img 
-                          src={seq.imageUrl} 
-                          alt={seq.title} 
-                          className="w-16 h-12 object-cover rounded"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{seq.title}</div>
-                          <div className="flex items-center space-x-2">
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs bg-primary/10 text-primary border-primary/20"
-                            >
-                              {seq.software}
-                            </Badge>
-                            <div className="text-sm">
-                              {seq.price === 0 ? 'Free' : `$${seq.price.toFixed(2)}`}
+              {relatedSequences.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold mb-4">More from this Display</h3>
+                    
+                    <div className="space-y-4">
+                      {relatedSequences.map(seq => (
+                        <div key={seq.id} className="flex items-center space-x-3">
+                          <img 
+                            src={seq.imageUrl} 
+                            alt={seq.title} 
+                            className="w-16 h-12 object-cover rounded"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{seq.title}</div>
+                            <div className="flex items-center space-x-2">
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs bg-primary/10 text-primary border-primary/20"
+                              >
+                                {seq.software}
+                              </Badge>
+                              <div className="text-sm">
+                                {seq.price === 0 ? 'Free' : `$${seq.price.toFixed(2)}`}
+                              </div>
                             </div>
                           </div>
+                          <Link to={`/sequence/${seq.id}`}>
+                            <Button variant="ghost" size="icon" className="rounded-full">
+                              <ExternalLink size={16} />
+                            </Button>
+                          </Link>
                         </div>
-                        <Button variant="ghost" size="icon" className="rounded-full">
-                          <ExternalLink size={16} />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
