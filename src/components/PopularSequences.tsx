@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Music, Download, Star, DollarSign, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -143,27 +144,32 @@ const SequenceCard: React.FC<{ sequence: Sequence }> = ({ sequence }) => {
             </div>
           </div>
           
-          <Button 
-            size="sm" 
-            className={cn(
-              "rounded-full transition-all",
-              sequence.price === 0 ? "bg-primary/90 hover:bg-primary" : ""
-            )}
-          >
-            {sequence.price === 0 ? (
-              <>
-                <Download size={14} className="mr-1" /> 
-                Download
-              </>
-            ) : (
-              <>
-                <DollarSign size={14} className="mr-1" /> 
-                Buy Now
-              </>
-            )}
-          </Button>
+          <Link to={`/sequence/${sequence.id}`}>
+            <Button 
+              size="sm" 
+              className={cn(
+                "rounded-full transition-all",
+                sequence.price === 0 ? "bg-primary/90 hover:bg-primary" : ""
+              )}
+            >
+              {sequence.price === 0 ? (
+                <>
+                  <Download size={14} className="mr-1" /> 
+                  Download
+                </>
+              ) : (
+                <>
+                  <DollarSign size={14} className="mr-1" /> 
+                  Buy Now
+                </>
+              )}
+            </Button>
+          </Link>
         </div>
       </div>
+      
+      {/* Card overlay for link */}
+      <Link to={`/sequence/${sequence.id}`} className="absolute inset-0 z-10" aria-label={`View ${sequence.title}`}></Link>
     </div>
   );
 };
