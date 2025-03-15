@@ -68,7 +68,7 @@ const NavBar = () => {
           <Button variant="outline" size="icon" className="rounded-full">
             <Heart size={18} />
           </Button>
-          <Button variant="primary" className="rounded-full px-5">
+          <Button variant="default" className="rounded-full px-5">
             <LogIn size={18} className="mr-2" />
             Sign In
           </Button>
@@ -128,7 +128,7 @@ const NavBar = () => {
             <Button variant="outline" className="w-full justify-start">
               <User size={18} className="mr-2" /> Profile
             </Button>
-            <Button variant="primary" className="w-full mt-4">
+            <Button variant="default" className="w-full mt-4">
               <LogIn size={18} className="mr-2" /> Sign In
             </Button>
           </div>
