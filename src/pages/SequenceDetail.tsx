@@ -140,15 +140,19 @@ const SequenceDetail: React.FC = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Breadcrumbs */}
+          {/* Breadcrumbs - FIXED: Removed 'as' prop and used proper component structure */}
           <Breadcrumb className="mb-6">
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink as={Link} to="/sequences">Sequences</BreadcrumbLink>
+                <BreadcrumbLink asChild>
+                  <Link to="/sequences">Sequences</Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
