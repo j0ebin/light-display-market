@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Heart, MapPin, Calendar, Music } from 'lucide-react';
@@ -149,9 +148,7 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Container */}
       <div className="aspect-[4/3] w-full overflow-hidden relative">
-        {/* Initial blur overlay while image loads */}
         <div 
           className={cn(
             "absolute inset-0 bg-muted backdrop-blur-sm z-10 transition-opacity duration-500",
@@ -159,7 +156,6 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
           )}
         />
         
-        {/* Image with loading effect */}
         <img
           src={display.image_url}
           alt={display.name}
@@ -172,7 +168,6 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
           loading="lazy"
         />
         
-        {/* Favorite Button */}
         <Button
           variant="ghost"
           size="icon"
@@ -192,7 +187,6 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
           />
         </Button>
         
-        {/* Category Badge */}
         <Badge 
           variant="secondary" 
           className="absolute bottom-3 left-3 z-20 bg-black/30 text-white backdrop-blur-sm border-none"
@@ -201,7 +195,6 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
         </Badge>
       </div>
 
-      {/* Content */}
       <div className="p-4 space-y-3">
         <div className="flex justify-between items-start">
           <h3 className="font-medium text-xl line-clamp-1">{display.name}</h3>
@@ -211,14 +204,12 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
           </div>
         </div>
 
-        {/* Owner info */}
         {display.owner && (
           <div 
             className="flex items-center gap-2 cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // Handle profile click - can be replaced with actual link in the future
               alert(`View ${display.owner?.name}'s profile`);
             }}
           >
@@ -255,46 +246,14 @@ const DisplayCard: React.FC<{ display: DisplayWithOwner }> = ({ display }) => {
         </Button>
       </div>
       
-      {/* Card overlay for link */}
       <Link to={`/display/${display.id}`} className="absolute inset-0 z-10" aria-label={`View ${display.name}`}></Link>
     </div>
   );
 };
 
 const FeaturedDisplays = () => {
-  // In a future implementation, we could fetch displays from Supabase here
   const [displays, setDisplays] = useState<DisplayWithOwner[]>(mockDisplays);
   
-  // useEffect(() => {
-  //   const fetchDisplays = async () => {
-  //     const { data, error } = await supabase
-  //       .from('displays')
-  //       .select('*')
-  //       .limit(3);
-  //       
-  //     if (error) {
-  //       console.error('Error fetching displays:', error);
-  //       return;
-  //     }
-  //       
-  //     if (data) {
-  //       // Transform data to include isFavorite and songCount
-  //       const displaysWithAdditions = data.map(display => ({
-  //         ...display,
-  //         isFavorite: false, // Default value, can be updated with user preferences
-  //         songCount: Math.floor(Math.random() * 15) + 5, // Random number for demo
-  //         owner: {
-  //           name: "Display Owner", // Placeholder
-  //           avatar: `https://i.pravatar.cc/150?img=${display.id}` // Placeholder
-  //         }
-  //       }));
-  //       setDisplays(displaysWithAdditions);
-  //     }
-  //   };
-  //   
-  //   fetchDisplays();
-  // }, []);
-
   return (
     <section className="py-16 px-6">
       <div className="max-w-7xl mx-auto">
