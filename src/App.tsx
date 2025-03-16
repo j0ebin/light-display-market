@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SequenceDetail from "./pages/SequenceDetail";
 import DisplayDetail from "./pages/DisplayDetail";
+import Displays from "./pages/Displays";
+import Sequences from "./pages/Sequences";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/sequence/:id" element={<SequenceDetail />} />
           <Route path="/display/:id" element={<DisplayDetail />} />
+          <Route path="/displays" element={<Displays />} />
+          <Route path="/sequences" element={<Sequences />} />
           {/* Add future routes here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
