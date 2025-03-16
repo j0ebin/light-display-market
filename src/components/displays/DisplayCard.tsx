@@ -7,38 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Display } from '@/types/sequence';
-
-interface DisplayWithOwner extends Display {
-  isFavorite: boolean;
-  owner?: {
-    name: string;
-    avatar: string;
-  };
-  songCount: number;
-}
+import { DisplayWithOwner } from '@/data/mockDisplaysData';
+import { formatSchedule } from '@/utils/displayUtils';
 
 interface DisplayCardProps {
   display: DisplayWithOwner;
 }
-
-const formatSchedule = (schedule: any): string => {
-  if (!schedule) return 'Schedule not available';
-  
-  const startDate = new Date(schedule.start_date);
-  const endDate = new Date(schedule.end_date);
-  
-  const startMonth = startDate.toLocaleString('default', { month: 'short' });
-  const endMonth = endDate.toLocaleString('default', { month: 'short' });
-  
-  const startDay = startDate.getDate();
-  const endDay = endDate.getDate();
-  
-  const hours = schedule.hours 
-    ? `${schedule.hours.start.substring(0, 5)}-${schedule.hours.end.substring(0, 5)}` 
-    : '';
-  
-  return `${startMonth} ${startDay} - ${endMonth} ${endDay} • ${hours}`;
-};
 
 const DisplayCard: React.FC<DisplayCardProps> = ({ display }) => {
   const [isFavorite, setIsFavorite] = useState(display.isFavorite);
