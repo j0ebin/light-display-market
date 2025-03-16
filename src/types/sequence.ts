@@ -31,3 +31,29 @@ export interface SequenceDetail extends Sequence {
     joinedDate: string;
   };
 }
+
+export interface Display {
+  id: number;
+  name: string;
+  description: string;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+  holiday_type: string | null;
+  display_type: string | null;
+  year_started: number | null;
+  fm_station: string | null;
+  image_url: string;
+  tags: string[] | null;
+  schedule: {
+    start_date: string;
+    end_date: string;
+    days: string[];
+    hours: {
+      start: string;
+      end: string;
+    };
+  } | null;
+  created_at: string;
+  updated_at: string;
+}

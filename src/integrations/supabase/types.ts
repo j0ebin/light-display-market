@@ -9,7 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      displays: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_type: string | null
+          fm_station: string | null
+          holiday_type: string | null
+          id: number
+          image_url: string | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name: string
+          schedule: Json | null
+          tags: string[] | null
+          updated_at: string
+          year_started: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_type?: string | null
+          fm_station?: string | null
+          holiday_type?: string | null
+          id?: number
+          image_url?: string | null
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name: string
+          schedule?: Json | null
+          tags?: string[] | null
+          updated_at?: string
+          year_started?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_type?: string | null
+          fm_station?: string | null
+          holiday_type?: string | null
+          id?: number
+          image_url?: string | null
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          schedule?: Json | null
+          tags?: string[] | null
+          updated_at?: string
+          year_started?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
