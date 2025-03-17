@@ -10,6 +10,8 @@ import OwnerHeader from '@/components/owners/OwnerHeader';
 import OwnerSocialLinks from '@/components/owners/OwnerSocialLinks';
 import OwnerDisplayCard from '@/components/owners/OwnerDisplayCard';
 import OwnerSequencesList from '@/components/owners/OwnerSequencesList';
+import OwnerAboutTab from '@/components/owners/OwnerAboutTab';
+import OwnerSequencesTab from '@/components/owners/OwnerSequencesTab';
 import { getOwnerById, getDisplayByOwnerId } from '@/data/mockOwnersData';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 import { Owner } from '@/types/owner';
@@ -115,57 +117,11 @@ const OwnerProfile: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="sequences" className="mt-0">
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">Available Sequences</h2>
-                    <p className="text-muted-foreground">
-                      Browse and purchase synchronized light sequences created by {owner.name}.
-                    </p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {mockSequences.slice(0, 4).map(sequence => (
-                        <div key={sequence.id} className="bg-card rounded-lg overflow-hidden border">
-                          <div className="aspect-video bg-muted relative">
-                            <img 
-                              src={sequence.imageUrl} 
-                              alt={sequence.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-medium text-lg mb-1">{sequence.title}</h3>
-                            <div className="flex justify-between items-center">
-                              <Badge 
-                                variant="outline" 
-                                className="bg-primary/10 text-primary border-primary/20"
-                              >
-                                {sequence.software}
-                              </Badge>
-                              <div className="font-medium">
-                                {sequence.price === 0 ? 'Free' : `$${sequence.price.toFixed(2)}`}
-                              </div>
-                            </div>
-                            <Button className="w-full mt-3" asChild>
-                              <Link to={`/sequence/${sequence.id}`}>View Details</Link>
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <OwnerSequencesTab owner={owner} />
                 </TabsContent>
                 
                 <TabsContent value="about" className="mt-0">
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">About {owner.name}</h2>
-                    <div className="prose max-w-none">
-                      <p>{owner.biography}</p>
-                      <p>
-                        {owner.name} has been creating holiday light displays since {owner.joinedDate}. 
-                        They currently have {owner.displayCount} display and have created {owner.sequenceCount} sequences.
-                      </p>
-                      <p>Based in {owner.location}.</p>
-                    </div>
-                  </div>
+                  <OwnerAboutTab owner={owner} />
                 </TabsContent>
               </Tabs>
             </div>
