@@ -1,4 +1,3 @@
-
 export interface Sequence {
   id: string;
   title: string;
@@ -15,6 +14,7 @@ export interface SequenceDetail extends Sequence {
   videoUrl: string;
   description: string;
   createdAt: string;
+  song: Song;
   display: {
     id: string;
     title: string;
@@ -56,5 +56,15 @@ export interface Display {
   } | null;
   created_at: string;
   updated_at: string;
-  rating?: number; // Add rating as an optional property
+  rating?: number;
+  owner_id?: number;
+}
+
+export interface Song {
+  id: number;
+  title: string;
+  artist: string;
+  duration: string;
+  year?: number;
+  genre?: string;
 }

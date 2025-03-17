@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Display } from '@/types/sequence';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 import { formatSchedule } from '@/utils/displayUtils';
 
@@ -84,21 +83,20 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ display }) => {
         </div>
 
         {display.owner && (
-          <div 
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              alert(`View ${display.owner?.name}'s profile`);
-            }}
-          >
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={display.owner.avatar} alt={display.owner.name} />
-              <AvatarFallback>{display.owner.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {display.owner.name}
-            </span>
+          <div className="flex items-center gap-2">
+            <Link 
+              to={`/owner/${display.id}`} 
+              className="flex items-center gap-2 hover:text-primary transition-colors" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={display.owner.avatar} alt={display.owner.name} />
+                <AvatarFallback>{display.owner.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                {display.owner.name}
+              </span>
+            </Link>
           </div>
         )}
 

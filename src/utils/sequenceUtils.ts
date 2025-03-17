@@ -1,6 +1,7 @@
 
 import { Sequence, SequenceDetail } from "@/types/sequence";
 import { mockSequences } from "@/data/mockSequences";
+import { getSongForSequence } from "@/data/mockSongsData";
 
 // Get related sequences by display name
 export const getRelatedSequences = (currentId: string, displayName: string): Sequence[] => {
@@ -20,6 +21,7 @@ export const getSequenceDetails = (id: string): SequenceDetail | undefined => {
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Example YouTube embed URL
     description: 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
     createdAt: 'November 15, 2023',
+    song: getSongForSequence(id), // Get the associated song for this sequence
     display: {
       id: `display-${baseSequence.id}`,
       title: baseSequence.displayName,
