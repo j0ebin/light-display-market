@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Music, Star, Heart, Clock, Radio, Calendar as CalendarIcon, Tag } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import Map from '@/components/maps/Map';
-import { cn } from '@/lib/utils';
+import DisplayBreadcrumbs from '@/components/displays/DisplayBreadcrumbs';
+import DisplayHeader from '@/components/displays/DisplayHeader';
+import DisplayDescription from '@/components/displays/DisplayDescription';
+import DisplayScheduleCard from '@/components/displays/DisplayScheduleCard';
+import DisplayDetailsCard from '@/components/displays/DisplayDetailsCard';
+import DisplayOwnerCard from '@/components/displays/DisplayOwnerCard';
+import DisplaySequencesCard from '@/components/displays/DisplaySequencesCard';
 import { supabase } from "@/integrations/supabase/client";
 import { Display } from '@/types/sequence';
 
@@ -42,39 +43,6 @@ const mockDisplay: Display & { rating: number; songCount: number } = {
   updated_at: '2023-11-01T00:00:00Z',
   rating: 4.9,
   songCount: 12
-};
-
-const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-};
-
-const formatSchedule = (schedule: any): string => {
-  if (!schedule) return 'Schedule not available';
-  
-  const startDate = new Date(schedule.start_date);
-  const endDate = new Date(schedule.end_date);
-  
-  const startFormatted = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  const endFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  
-  return `${startFormatted} - ${endFormatted}`;
-};
-
-const formatHours = (schedule: any): string => {
-  if (!schedule || !schedule.hours) return 'Hours not available';
-  
-  return `${schedule.hours.start.substring(0, 5)} - ${schedule.hours.end.substring(0, 5)}`;
-};
-
-const formatDays = (schedule: any): string => {
-  if (!schedule || !schedule.days || schedule.days.length === 0) return 'Days not available';
-  
-  if (schedule.days.length === 7) {
-    return 'Every day';
-  }
-  
-  return schedule.days.join(', ');
 };
 
 const DisplayDetail: React.FC = () => {
@@ -145,17 +113,7 @@ const DisplayDetail: React.FC = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
           {/* Breadcrumbs */}
-          <div className="flex items-center mb-8 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              Home
-            </Link>
-            <span className="mx-2 text-muted-foreground">/</span>
-            <Link to="/displays" className="text-muted-foreground hover:text-foreground transition-colors">
-              Displays
-            </Link>
-            <span className="mx-2 text-muted-foreground">/</span>
-            <span className="font-medium truncate">{display.name}</span>
-          </div>
+          <DisplayBreadcrumbs displayName={display.name} />
           
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -164,7 +122,7 @@ const DisplayDetail: React.FC = () => {
               {/* Main image */}
               <div className="rounded-xl overflow-hidden">
                 <img 
-                  src={display.image_url} 
+                  src={display.image_url || ''} 
                   alt={display.name}
                   className="w-full h-auto aspect-video object-cover"
                 />
@@ -172,117 +130,32 @@ const DisplayDetail: React.FC = () => {
               
               {/* Display info */}
               <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h1 className="text-3xl font-bold">{display.name}</h1>
-                    <div className="flex items-center mt-2 space-x-3">
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                        {display.display_type}
-                      </Badge>
-                      <div className="flex items-center text-amber-500">
-                        <Star size={16} className="fill-amber-500 mr-1" />
-                        <span>{display.rating}</span>
-                      </div>
-                      {display.holiday_type && (
-                        <Badge variant="outline">
-                          {display.holiday_type}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={() => setIsFavorite(!isFavorite)}
-                  >
-                    <Heart
-                      size={18}
-                      className={cn(
-                        "transition-colors",
-                        isFavorite ? "fill-destructive stroke-destructive" : "fill-none"
-                      )}
-                    />
-                  </Button>
-                </div>
+                <DisplayHeader 
+                  name={display.name}
+                  displayType={display.display_type}
+                  rating={display.rating}
+                  holidayType={display.holiday_type}
+                  location={display.location}
+                  isFavorite={isFavorite}
+                  onToggleFavorite={() => setIsFavorite(!isFavorite)}
+                />
                 
-                <div className="flex items-center mb-4">
-                  <MapPin size={16} className="text-muted-foreground mr-2" />
-                  <span>{display.location}</span>
-                </div>
-                
-                <div className="prose prose-sm max-w-none mb-8">
-                  <p>{display.description}</p>
-                </div>
-                
-                {/* Tags */}
-                {display.tags && display.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {display.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="bg-secondary/50">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                <DisplayDescription 
+                  description={display.description || ''}
+                  tags={display.tags}
+                />
                 
                 {/* Display details grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                   {/* Schedule */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center">
-                        <Calendar className="mr-2" size={18} />
-                        Viewing Schedule
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Dates</div>
-                          <div className="font-medium">{formatSchedule(display.schedule)}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Days</div>
-                          <div className="font-medium">{formatDays(display.schedule)}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Hours</div>
-                          <div className="font-medium">{formatHours(display.schedule)}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DisplayScheduleCard schedule={display.schedule} />
                   
                   {/* Additional Info */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center">
-                        <Tag className="mr-2" size={18} />
-                        Display Details
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {display.year_started && (
-                          <div>
-                            <div className="text-sm text-muted-foreground mb-1">Running Since</div>
-                            <div className="font-medium">{display.year_started}</div>
-                          </div>
-                        )}
-                        {display.fm_station && (
-                          <div>
-                            <div className="text-sm text-muted-foreground mb-1">Tune Radio To</div>
-                            <div className="font-medium">{display.fm_station}</div>
-                          </div>
-                        )}
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Songs in Show</div>
-                          <div className="font-medium">{display.songCount} songs</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DisplayDetailsCard 
+                    yearStarted={display.year_started}
+                    fmStation={display.fm_station}
+                    songCount={display.songCount}
+                  />
                 </div>
               </div>
             </div>
@@ -308,42 +181,14 @@ const DisplayDetail: React.FC = () => {
                 </Card>
               )}
               
-              {/* Display owner card placeholder */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Display Owner</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src="https://i.pravatar.cc/150?img=1" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">John Doe</div>
-                      <div className="text-sm text-muted-foreground">Display Creator</div>
-                    </div>
-                  </div>
-                  <Button className="w-full mt-4" variant="outline">
-                    View Profile
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Display owner card */}
+              <DisplayOwnerCard 
+                avatarUrl="https://i.pravatar.cc/150?img=1"
+                ownerName="John Doe"
+              />
               
-              {/* Related sequences card placeholder */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Sequences Available</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Purchase sequences used in this display to recreate it yourself!
-                  </p>
-                  <Button className="w-full">
-                    View Sequences
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Related sequences card */}
+              <DisplaySequencesCard />
             </div>
           </div>
         </div>
