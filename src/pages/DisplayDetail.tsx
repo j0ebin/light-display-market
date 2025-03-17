@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import Map from '@/components/maps/Map';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { Display } from '@/types/sequence';
@@ -288,18 +289,18 @@ const DisplayDetail: React.FC = () => {
             
             {/* Right column - Map, Owner, Related */}
             <div className="space-y-6">
-              {/* Map placeholder - can be replaced with an actual map component */}
+              {/* Map with Mapbox */}
               {display.latitude && display.longitude && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">Location</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                      <p className="text-sm text-muted-foreground">
-                        Map placeholder - would display at coordinates {display.latitude}, {display.longitude}
-                      </p>
-                    </div>
+                    <Map 
+                      latitude={display.latitude} 
+                      longitude={display.longitude}
+                      markerTitle={display.name}
+                    />
                     <div className="mt-4 text-sm">
                       <div className="font-medium">{display.location}</div>
                     </div>
