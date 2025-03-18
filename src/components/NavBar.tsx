@@ -1,13 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, MapPin, Heart, User, LogIn } from 'lucide-react';
+import { Search, Menu, X, MapPin, Heart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthPopover from '@/components/auth/AuthPopover';
+import AuthDialog from '@/components/auth/AuthDialog';
+import { useToast } from '@/hooks/use-toast';
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +31,15 @@ const NavBar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -68,10 +84,19 @@ const NavBar = () => {
           <Button variant="outline" size="icon" className="rounded-full">
             <Heart size={18} />
           </Button>
-          <Button variant="default" className="rounded-full px-5">
-            <LogIn size={18} className="mr-2" />
-            Sign In
-          </Button>
+          
+          {user ? (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full"
+              onClick={handleSignOut}
+            >
+              <LogOut size={18} />
+            </Button>
+          ) : (
+            <AuthPopover />
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -128,9 +153,18 @@ const NavBar = () => {
             <Button variant="outline" className="w-full justify-start">
               <User size={18} className="mr-2" /> Profile
             </Button>
-            <Button variant="default" className="w-full mt-4">
-              <LogIn size={18} className="mr-2" /> Sign In
-            </Button>
+            
+            {user ? (
+              <Button 
+                variant="default" 
+                className="w-full mt-4"
+                onClick={handleSignOut}
+              >
+                <LogOut size={18} className="mr-2" /> Sign Out
+              </Button>
+            ) : (
+              <AuthDialog triggerClassName="w-full mt-4" />
+            )}
           </div>
         </nav>
       </div>
