@@ -1,3 +1,4 @@
+
 export interface Sequence {
   id: string;
   title: string;
@@ -6,15 +7,21 @@ export interface Sequence {
   price: number;
   rating: number;
   downloads: number;
-  songCount: number;
   software: 'xLights' | 'LOR';
+  song: {
+    title: string;
+    artist: string;
+    genre?: string;
+  };
+  creatorName: string;
+  creatorAvatar: string;
+  channelCount?: number; // For LOR sequences
 }
 
 export interface SequenceDetail extends Sequence {
   videoUrl: string;
   description: string;
   createdAt: string;
-  song: Song;
   display: {
     id: string;
     title: string;

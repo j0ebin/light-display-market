@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Download, Star, DollarSign, Play } from 'lucide-react';
+import { Music, Download, Star, DollarSign, Play, Disc2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from '@/lib/utils';
 import { Sequence } from '@/types/sequence';
 
@@ -14,6 +15,7 @@ interface SequenceCardProps {
 const SequenceCard: React.FC<SequenceCardProps> = ({ sequence }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const isFree = sequence.price === 0;
 
   return (
     <div 
@@ -66,12 +68,12 @@ const SequenceCard: React.FC<SequenceCardProps> = ({ sequence }) => {
           <Badge 
             className={cn(
               "backdrop-blur-sm border-none",
-              sequence.price === 0 
+              isFree
                 ? "bg-green-500/80 text-white" 
                 : "bg-white/20 text-white"
             )}
           >
-            {sequence.price === 0 ? 'Free' : `$${sequence.price.toFixed(2)}`}
+            {isFree ? 'Free' : `$${sequence.price.toFixed(2)}`}
           </Badge>
         </div>
       </div>
@@ -89,39 +91,57 @@ const SequenceCard: React.FC<SequenceCardProps> = ({ sequence }) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Download size={14} />
-              <span>{sequence.downloads}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Music size={14} />
-              <span>{sequence.songCount} songs</span>
+        {/* Song Details */}
+        <div className="mt-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Music size={14} className="text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium line-clamp-1">{sequence.song.title}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">{sequence.song.artist}</p>
             </div>
           </div>
+        </div>
+
+        {/* Creator Info and Action Button */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={sequence.creatorAvatar} alt={sequence.creatorName} />
+              <AvatarFallback>{sequence.creatorName.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-muted-foreground">{sequence.creatorName}</span>
+          </div>
           
-          <Link to={`/sequence/${sequence.id}`}>
-            <Button 
-              size="sm" 
-              className={cn(
-                "rounded-full transition-all",
-                sequence.price === 0 ? "bg-primary/90 hover:bg-primary" : ""
-              )}
-            >
-              {sequence.price === 0 ? (
-                <>
-                  <Download size={14} className="mr-1" /> 
-                  Download
-                </>
-              ) : (
-                <>
-                  <DollarSign size={14} className="mr-1" /> 
-                  Buy Now
-                </>
-              )}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {sequence.software === 'LOR' && sequence.channelCount && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Disc2 size={14} />
+                <span>{sequence.channelCount} ch</span>
+              </div>
+            )}
+            
+            <Link to={`/sequence/${sequence.id}`}>
+              <Button 
+                size="sm" 
+                className={cn(
+                  "rounded-full transition-all",
+                  isFree ? "bg-primary/90 hover:bg-primary" : ""
+                )}
+              >
+                {isFree ? (
+                  <>
+                    <Download size={14} className="mr-1" /> 
+                    Download
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} className="mr-1" /> 
+                    Download
+                  </>
+                )}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
       

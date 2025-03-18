@@ -10,8 +10,14 @@ export const mockSequences: Sequence[] = [
     price: 15.99,
     rating: 4.8,
     downloads: 243,
-    songCount: 3,
-    software: 'xLights'
+    software: 'xLights',
+    song: {
+      title: 'Carol of the Bells',
+      artist: 'Trans-Siberian Orchestra',
+      genre: 'Rock'
+    },
+    creatorName: 'John Johnson',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=1'
   },
   {
     id: '2',
@@ -21,8 +27,15 @@ export const mockSequences: Sequence[] = [
     price: 0,
     rating: 4.6,
     downloads: 512,
-    songCount: 5,
-    software: 'LOR'
+    software: 'LOR',
+    song: {
+      title: 'All I Want for Christmas Is You',
+      artist: 'Mariah Carey',
+      genre: 'Pop'
+    },
+    creatorName: 'Sarah Holiday',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=2',
+    channelCount: 16
   },
   {
     id: '3',
@@ -32,7 +45,13 @@ export const mockSequences: Sequence[] = [
     price: 24.99,
     rating: 4.9,
     downloads: 187,
-    songCount: 4,
-    software: 'xLights'
+    software: 'xLights',
+    song: {
+      title: 'Wizards in Winter',
+      artist: 'Trans-Siberian Orchestra',
+      genre: 'Rock'
+    },
+    creatorName: 'Mike Modern',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=3'
   }
 ];

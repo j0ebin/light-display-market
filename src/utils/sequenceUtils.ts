@@ -21,7 +21,6 @@ export const getSequenceDetails = (id: string): SequenceDetail | undefined => {
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Example YouTube embed URL
     description: 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
     createdAt: 'November 15, 2023',
-    song: getSongForSequence(id), // Get the associated song for this sequence
     display: {
       id: `display-${baseSequence.id}`,
       title: baseSequence.displayName,
@@ -31,8 +30,8 @@ export const getSequenceDetails = (id: string): SequenceDetail | undefined => {
     },
     seller: {
       id: `user-${baseSequence.id}`,
-      name: `${baseSequence.displayName} Owner`,
-      avatar: 'https://i.pravatar.cc/150?img=68',
+      name: baseSequence.creatorName,
+      avatar: baseSequence.creatorAvatar,
       rating: 4.9,
       sequencesCount: 12,
       joinedDate: 'November 2021'

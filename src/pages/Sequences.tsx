@@ -6,9 +6,14 @@ import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Sequence } from '@/types/sequence';
 import SequenceCard from '@/components/sequences/SequenceCard';
-import { Search, DollarSign, Filter, SortDesc } from 'lucide-react';
+import { Search, Filter, Music, Podcast, Disc2, Tag } from 'lucide-react';
+import { mockSequences } from '@/data/mockSequences';
 
 // Mock sequence categories
 const categories = [
@@ -20,36 +25,17 @@ const categories = [
   { id: 'recent', name: 'Recently Added' },
 ];
 
-// Generate mock sequences
-const generateMockSequences = (count: number): Sequence[] => {
-  const sequences: Sequence[] = [];
-  
-  for (let i = 1; i <= count; i++) {
-    sequences.push({
-      id: `seq-${i}`,
-      title: `Holiday Sequence ${i}`,
-      displayName: `Display Name ${i}`,
-      imageUrl: `https://images.unsplash.com/photo-${1606946184955 + i * 1000}-a8cb11e66336?q=80&w=1080`,
-      price: i % 3 === 0 ? 0 : 4.99 + (i % 5),
-      rating: 3.5 + (i % 10) / 5,
-      downloads: 50 + (i * 10),
-      songCount: 1 + (i % 5),
-      software: i % 2 === 0 ? 'xLights' : 'LOR'
-    });
-  }
-  
-  return sequences;
-};
+// Extract unique genres from sequences
+const allGenres = Array.from(new Set(mockSequences.map(seq => seq.song.genre).filter(Boolean) as string[]));
 
-// Create mock sequences for each category
-const allSequences = generateMockSequences(30);
+// Create sequences by category
 const sequencesByCategory: Record<string, Sequence[]> = {
-  all: allSequences,
-  free: allSequences.filter(seq => seq.price === 0),
-  xLights: allSequences.filter(seq => seq.software === 'xLights'),
-  LOR: allSequences.filter(seq => seq.software === 'LOR'),
-  popular: [...allSequences].sort((a, b) => b.downloads - a.downloads),
-  recent: [...allSequences].sort((a, b) => b.id.localeCompare(a.id)),
+  all: mockSequences,
+  free: mockSequences.filter(seq => seq.price === 0),
+  xLights: mockSequences.filter(seq => seq.software === 'xLights'),
+  LOR: mockSequences.filter(seq => seq.software === 'LOR'),
+  popular: [...mockSequences].sort((a, b) => b.downloads - a.downloads),
+  recent: [...mockSequences].sort((a, b) => b.id.localeCompare(a.id)),
 };
 
 const Sequences = () => {
@@ -58,21 +44,61 @@ const Sequences = () => {
   
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [songFilter, setSongFilter] = useState('');
+  const [artistFilter, setArtistFilter] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   // Update search query when URL params change
   useEffect(() => {
     setSearchQuery(initialQuery);
   }, [initialQuery]);
 
-  // Filter sequences based on search
-  const filteredSequences = sequencesByCategory[activeCategory].filter(sequence => 
-    sequence.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sequence.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter sequences based on all filters
+  const filteredSequences = sequencesByCategory[activeCategory].filter(sequence => {
+    // General search query (title or display name)
+    const matchesQuery = 
+      searchQuery === '' || 
+      sequence.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sequence.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sequence.song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sequence.song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (sequence.song.genre && sequence.song.genre.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Specific song filter
+    const matchesSong = 
+      songFilter === '' || 
+      sequence.song.title.toLowerCase().includes(songFilter.toLowerCase());
+
+    // Specific artist filter
+    const matchesArtist = 
+      artistFilter === '' || 
+      sequence.song.artist.toLowerCase().includes(artistFilter.toLowerCase());
+
+    // Genre filter
+    const matchesGenre = 
+      selectedGenres.length === 0 || 
+      (sequence.song.genre && selectedGenres.includes(sequence.song.genre));
+
+    return matchesQuery && matchesSong && matchesArtist && matchesGenre;
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchParams(searchQuery ? { q: searchQuery } : {});
+  };
+
+  const handleGenreChange = (genre: string) => {
+    setSelectedGenres(current => 
+      current.includes(genre)
+        ? current.filter(g => g !== genre)
+        : [...current, genre]
+    );
+  };
+
+  const clearFilters = () => {
+    setSongFilter('');
+    setArtistFilter('');
+    setSelectedGenres([]);
   };
 
   return (
@@ -94,7 +120,7 @@ const Sequences = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
-                placeholder="Search sequences by title or display name" 
+                placeholder="Search sequences by title, song, artist or genre" 
                 className="pl-10 pr-4 py-6"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,14 +130,83 @@ const Sequences = () => {
               <Search size={18} />
               <span>Search</span>
             </Button>
-            <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
-              <DollarSign size={18} />
-              <span>Price Range</span>
-            </Button>
-            <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
-              <SortDesc size={18} />
-              <span>Sort By</span>
-            </Button>
+            
+            {/* Song Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
+                  <Music size={18} />
+                  <span>Song</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filter by Song</h4>
+                  <Input 
+                    placeholder="Song title..." 
+                    value={songFilter}
+                    onChange={(e) => setSongFilter(e.target.value)}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {/* Artist Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
+                  <Podcast size={18} />
+                  <span>Artist</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filter by Artist</h4>
+                  <Input 
+                    placeholder="Artist name..." 
+                    value={artistFilter}
+                    onChange={(e) => setArtistFilter(e.target.value)}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {/* Genre Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
+                  <Tag size={18} />
+                  <span>Genre</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Filter by Genre</h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearFilters}
+                      className="h-auto text-xs p-0"
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {allGenres.map(genre => (
+                      <div key={genre} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`genre-${genre}`} 
+                          checked={selectedGenres.includes(genre)}
+                          onCheckedChange={() => handleGenreChange(genre)}
+                        />
+                        <Label htmlFor={`genre-${genre}`}>{genre}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </form>
           
           {/* Categories */}

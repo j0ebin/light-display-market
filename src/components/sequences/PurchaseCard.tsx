@@ -33,17 +33,8 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({ price }) => {
           className="w-full text-base py-6 mb-4"
           variant={isFree ? "outline" : "default"}
         >
-          {isFree ? (
-            <>
-              <Download size={18} className="mr-2" />
-              Download Now
-            </>
-          ) : (
-            <>
-              <DollarSign size={18} className="mr-2" />
-              Buy Now
-            </>
-          )}
+          <Download size={18} className="mr-2" />
+          Download Now
         </Button>
         
         <div className="text-sm text-center text-muted-foreground">
