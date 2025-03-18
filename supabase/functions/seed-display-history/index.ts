@@ -1,6 +1,6 @@
 
 // This is a Supabase Edge Function
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import { createSupabaseClient } from "./supabase-client.ts";
 import { seedDisplayData } from "./seed-display-data.ts";

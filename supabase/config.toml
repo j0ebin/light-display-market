@@ -39,4 +39,5 @@ enable_signup = true
 enabled = true
 
 [functions]
-seed-display-history = {}
+[functions.seed-display-history]
+verify_jwt = true

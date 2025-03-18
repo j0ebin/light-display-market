@@ -13,24 +13,20 @@ export const seedDisplayHistory = async (): Promise<{ success: boolean; message:
     
     const accessToken = sessionData.session.access_token;
     
-    const response = await fetch(
-      'https://vhaizqhkodqyqplpqcss.supabase.co/functions/v1/seed-display-history',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
+    // Use the supabase functions.invoke method instead of direct fetch
+    const { data, error } = await supabase.functions.invoke('seed-display-history', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
       }
-    );
+    });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to seed display history');
+    if (error) {
+      throw new Error(error.message || 'Failed to seed display history');
     }
     
-    const result = await response.json();
-    return result;
+    return data;
   } catch (error) {
     console.error('Error seeding display history:', error);
     return { 

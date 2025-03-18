@@ -1,5 +1,5 @@
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { createMediaData } from "./media-data.ts";
 import { createSongsData, updateSongReferences } from "./songs-data.ts";
 
