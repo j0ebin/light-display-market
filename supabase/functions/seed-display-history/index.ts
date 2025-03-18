@@ -1,260 +1,152 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
 
+// This is a Supabase Edge Function
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+// Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => {
-  // Handle CORS preflight requests
+serve(async (req) => {
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    });
   }
-  
+
   try {
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      }
-    );
-
-    // Check if we have displays in the database already
-    const { data: existingDisplays, error: displayError } = await supabaseClient
-      .from('displays')
-      .select('id')
-      .limit(1);
-
-    if (displayError) {
-      throw new Error(`Error checking displays: ${displayError.message}`);
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header provided' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
     }
 
-    if (!existingDisplays || existingDisplays.length === 0) {
-      // Insert a display if none exists
-      const { data: newDisplay, error: insertError } = await supabaseClient
-        .from('displays')
-        .insert({
+    // Create Supabase client with auth header
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_ANON_KEY') || '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Mock data to seed into the database
+    const displayYears = [
+      {
+        display_id: 1,
+        year: 2020,
+        description: 'Our first year with a simple static display featuring classic Christmas lights and a few inflatables.'
+      },
+      {
+        display_id: 1,
+        year: 2021,
+        description: 'Added synchronized music through an FM transmitter and basic light sequencing.'
+      },
+      {
+        display_id: 1,
+        year: 2022,
+        description: 'Upgraded to full xLights sequencing with over 20,000 pixels and custom props.'
+      },
+      {
+        display_id: 1,
+        year: 2023,
+        description: 'Expanded the display to include a 20-foot mega tree, singing faces, and interactive elements.'
+      }
+    ];
+
+    // Create a displays record first if it doesn't exist
+    const { data: existingDisplays } = await supabase
+      .from('displays')
+      .select('id')
+      .eq('id', 1)
+      .single();
+
+    if (!existingDisplays) {
+      // Insert sample display if it doesn't exist
+      await supabase.from('displays').insert([
+        {
+          id: 1,
           name: 'Winter Wonderland Symphony',
-          description: 'A spectacular holiday light display synchronized to music, featuring over 50,000 LED lights programmed to dance to a variety of Christmas classics and contemporary holiday hits. The display includes animated snowflakes, dancing trees, singing faces, and a mesmerizing light tunnel that immerses visitors in a world of color and sound.',
+          description: 'A spectacular holiday light display synchronized to music.',
           location: 'Seattle, WA',
-          latitude: 47.6062,
-          longitude: -122.3321,
           holiday_type: 'Christmas',
-          display_type: 'Musical Light Show',
-          year_started: 2018,
-          fm_station: '88.1 FM',
-          image_url: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
-          tags: ['musical', 'family-friendly', 'animated', 'synchronized', 'LED'],
-          schedule: {
-            start_date: '2023-11-25',
-            end_date: '2024-01-05',
-            days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            hours: {
-              start: '17:00',
-              end: '22:00'
-            }
-          }
-        })
-        .select()
-        .single();
+          display_type: 'Musical Light Show'
+        }
+      ]);
+    }
 
-      if (insertError) {
-        throw new Error(`Error inserting display: ${insertError.message}`);
-      }
+    // Insert years
+    const { data: years, error: yearsError } = await supabase
+      .from('display_years')
+      .insert(displayYears)
+      .select();
 
-      // Use a different variable name to avoid reassignment error
-      const displayToUse = [newDisplay];
-      
-      // Check if we already have display years for this display
-      const displayId = displayToUse[0].id;
-      const { data: existingYears, error: yearsError } = await supabaseClient
-        .from('display_years')
-        .select('id')
-        .eq('display_id', displayId)
-        .limit(1);
+    if (yearsError) {
+      throw yearsError;
+    }
 
-      if (yearsError) {
-        throw new Error(`Error checking display years: ${yearsError.message}`);
-      }
+    // Seed media and songs for each year
+    let insertedMedia = [];
+    let insertedSongs = [];
 
-      // If we already have years, don't seed again
-      if (existingYears && existingYears.length > 0) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: 'Display history data already exists' 
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      // Insert display years
-      const { data: years, error: insertYearsError } = await supabaseClient
-        .from('display_years')
-        .insert([
-          {
-            display_id: displayId,
-            year: 2020,
-            description: 'Our first year with a simple static display featuring classic Christmas lights and a few inflatables.'
-          },
-          {
-            display_id: displayId,
-            year: 2021,
-            description: 'Added synchronized music through an FM transmitter and basic light sequencing.'
-          },
-          {
-            display_id: displayId,
-            year: 2022,
-            description: 'Upgraded to full xLights sequencing with over 20,000 pixels and custom props.'
-          },
-          {
-            display_id: displayId,
-            year: 2023,
-            description: 'Expanded the display to include a 20-foot mega tree, singing faces, and interactive elements.'
-          }
-        ])
-        .select();
-
-      if (insertYearsError) {
-        throw new Error(`Error inserting display years: ${insertYearsError.message}`);
-      }
-
-      // Map for year IDs
-      const yearMap: { [key: number]: string } = {};
-      years.forEach(year => {
-        yearMap[year.year] = year.id;
-      });
-
-      // Insert media for each year
-      const mediaInserts = [
+    if (years && years.length > 0) {
+      // Create media for each year
+      const mediaToInsert = years.flatMap((year, index) => [
         {
-          display_year_id: yearMap[2020],
+          display_year_id: year.id,
           type: 'image',
-          url: 'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?q=80&w=1080',
-          description: 'Front yard with traditional string lights'
+          url: `https://images.unsplash.com/photo-${1570000000 + index}?q=80&w=1080`,
+          description: `Display photo from ${year.year}`
         },
-        {
-          display_year_id: yearMap[2021],
-          type: 'image',
-          url: 'https://images.unsplash.com/photo-1545608444-f045a6db6133?q=80&w=1080',
-          description: 'Added light arches and mini-trees'
-        },
-        {
-          display_year_id: yearMap[2022],
-          type: 'image',
-          url: 'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=1080',
-          description: 'First year with pixel mapping'
-        },
-        {
-          display_year_id: yearMap[2022],
+        // Add a video for years after 2021
+        ...(year.year >= 2022 ? [{
+          display_year_id: year.id,
           type: 'video',
           url: 'https://www.youtube.com/embed/YEHIkcAXP9Y',
-          description: 'Full display sequence from 2022'
-        },
-        {
-          display_year_id: yearMap[2023],
-          type: 'image',
-          url: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
-          description: 'Current display with mega tree'
-        },
-        {
-          display_year_id: yearMap[2023],
-          type: 'video',
-          url: 'https://www.youtube.com/embed/FmFJRFEHpNQ',
-          description: 'Light show feature from local news'
-        }
-      ];
+          description: `Light show video from ${year.year}`
+        }] : [])
+      ]);
 
-      const { error: mediaError } = await supabaseClient
+      const { data: media, error: mediaError } = await supabase
         .from('display_media')
-        .insert(mediaInserts);
-
-      if (mediaError) {
-        throw new Error(`Error inserting media: ${mediaError.message}`);
-      }
-
-      // Insert songs - first the original songs
-      const { data: songsData, error: songsError } = await supabaseClient
-        .from('display_songs')
-        .insert([
-          {
-            display_year_id: yearMap[2020],
-            title: 'Jingle Bells',
-            artist: 'Traditional',
-            year_introduced: 2020,
-            sequence_available: false
-          },
-          {
-            display_year_id: yearMap[2021],
-            title: 'Carol of the Bells',
-            artist: 'Trans-Siberian Orchestra',
-            year_introduced: 2021,
-            sequence_available: true,
-            sequence_price: 19.99
-          },
-          {
-            display_year_id: yearMap[2022],
-            title: 'All I Want for Christmas Is You',
-            artist: 'Mariah Carey',
-            year_introduced: 2022,
-            sequence_available: true,
-            sequence_price: 24.99
-          },
-          {
-            display_year_id: yearMap[2022],
-            title: 'Let It Go',
-            artist: 'Idina Menzel',
-            year_introduced: 2022,
-            sequence_available: true,
-            sequence_price: 29.99
-          }
-        ])
+        .insert(mediaToInsert)
         .select();
 
-      if (songsError) {
-        throw new Error(`Error inserting songs: ${songsError.message}`);
+      if (mediaError) {
+        throw mediaError;
       }
 
-      // Map for song references
-      const songMap: { [key: string]: string } = {};
-      songsData.forEach(song => {
-        const key = `${song.title}-${song.artist}`;
-        songMap[key] = song.id;
-      });
+      insertedMedia = media || [];
 
-      // Insert reused songs for 2023
-      const reusedSongs = [
+      // Create songs for each year
+      const songsBase = [
         {
-          display_year_id: yearMap[2023],
           title: 'Carol of the Bells',
           artist: 'Trans-Siberian Orchestra',
           year_introduced: 2021,
-          reused_from: songMap['Carol of the Bells-Trans-Siberian Orchestra'],
           sequence_available: true,
           sequence_price: 19.99
         },
         {
-          display_year_id: yearMap[2023],
           title: 'All I Want for Christmas Is You',
           artist: 'Mariah Carey',
           year_introduced: 2022,
-          reused_from: songMap['All I Want for Christmas Is You-Mariah Carey'],
           sequence_available: true,
           sequence_price: 24.99
         },
         {
-          display_year_id: yearMap[2023],
+          title: 'Let It Go',
+          artist: 'Idina Menzel',
+          year_introduced: 2022,
+          sequence_available: true,
+          sequence_price: 29.99
+        },
+        {
           title: 'Christmas Eve/Sarajevo',
           artist: 'Trans-Siberian Orchestra',
           year_introduced: 2023,
@@ -263,69 +155,82 @@ serve(async (req: Request) => {
         }
       ];
 
-      const { error: reusedSongsError } = await supabaseClient
-        .from('display_songs')
-        .insert(reusedSongs);
+      // Create songs for each year with proper references
+      const songsByYear = {};
+      for (const year of years) {
+        const yearSongs = songsBase
+          .filter(song => song.year_introduced <= year.year)
+          .map(song => ({
+            display_year_id: year.id,
+            title: song.title,
+            artist: song.artist,
+            year_introduced: song.year_introduced,
+            sequence_available: song.sequence_available,
+            sequence_price: song.sequence_price,
+            // No reused_from yet, will update later
+            reused_from: null
+          }));
 
-      if (reusedSongsError) {
-        throw new Error(`Error inserting reused songs: ${reusedSongsError.message}`);
-      }
+        const { data: songs } = await supabase
+          .from('display_songs')
+          .insert(yearSongs)
+          .select();
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Display history data seeded successfully'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        if (songs) {
+          songsByYear[year.year] = songs;
+          insertedSongs = [...insertedSongs, ...songs];
         }
-      );
-    } else {
-      // Displays already exist, use the existing ones
-      const displayId = existingDisplays[0].id;
-      
-      // Check if display years already exist
-      const { data: existingYears, error: yearsError } = await supabaseClient
-        .from('display_years')
-        .select('id')
-        .eq('display_id', displayId)
-        .limit(1);
-
-      if (yearsError) {
-        throw new Error(`Error checking display years: ${yearsError.message}`);
       }
 
-      // If years already exist, don't seed again
-      if (existingYears && existingYears.length > 0) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: 'Display history data already exists' 
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      // Now update the reused_from references for songs in later years
+      const updates = [];
+      for (let i = 1; i < years.length; i++) {
+        const currentYear = years[i].year;
+        const previousYears = years.slice(0, i).map(y => y.year);
+        
+        for (const song of songsByYear[currentYear] || []) {
+          // Find matching song in previous years
+          for (const prevYear of previousYears) {
+            const matchingSongs = (songsByYear[prevYear] || [])
+              .filter(s => s.title === song.title && s.artist === song.artist);
+            
+            if (matchingSongs.length > 0) {
+              // Update the reused_from field
+              updates.push({
+                id: song.id,
+                reused_from: matchingSongs[0].id
+              });
+              break;
+            }
           }
-        );
+        }
       }
 
-      // Otherwise proceed with seeding for the existing display
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'No displays to seed history for' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      if (updates.length > 0) {
+        await supabase.from('display_songs').upsert(updates);
       }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Display history data seeded successfully',
+        data: {
+          years: years || [],
+          media: insertedMedia,
+          songs: insertedSongs
+        }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+  } catch (error) {
+    console.error('Error seeding display history:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: error.message || 'An error occurred while seeding display history data'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   AccordionContent, 
@@ -19,7 +18,12 @@ import {
 } from '@/components/ui/table';
 import { AlertCircle, Music, Image, Video, Download, Tag } from 'lucide-react';
 import { DisplayYear, DisplayMedia, DisplaySong } from '@/types/displayHistory';
-import { fetchYearMedia, fetchYearSongs, mockDisplayMedia, mockDisplaySongs } from '@/utils/displayHistoryUtils';
+import { 
+  fetchYearMedia, 
+  fetchYearSongs, 
+  mockDisplayMedia, 
+  mockDisplaySongs 
+} from '@/utils/displayHistoryUtils';
 
 interface DisplayYearContentProps {
   year: DisplayYear;
