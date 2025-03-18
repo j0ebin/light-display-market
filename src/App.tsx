@@ -9,6 +9,7 @@ import Sequences from '@/pages/Sequences';
 import DisplayDetail from '@/pages/DisplayDetail';
 import SequenceDetail from '@/pages/SequenceDetail';
 import OwnerProfile from '@/pages/OwnerProfile';
+import UserProfile from '@/pages/UserProfile';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/sequences" element={<Sequences />} />
           <Route path="/sequence/:id" element={<SequenceDetail />} />
           <Route path="/owner/:id" element={<OwnerProfile />} />
+          <Route path="/profile" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
