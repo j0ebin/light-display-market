@@ -10,7 +10,7 @@ import AuthDialog from '@/components/auth/AuthDialog';
 import { useToast } from '@/hooks/use-toast';
 
 const NavBar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(true); // Always start with true
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -21,12 +21,9 @@ const NavBar = () => {
       if (window.scrollY > 10) {
         setIsScrolled(true);
       } else {
-        setIsScrolled(false);
+        setIsScrolled(true); // Always keep it true
       }
     };
-
-    // Initial state - set background for index page
-    setIsScrolled(true);
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -49,7 +46,7 @@ const NavBar = () => {
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out px-6 py-4",
-        isScrolled ? "bg-background/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+        "bg-background/80 backdrop-blur-md shadow-sm" // Always apply background
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -65,13 +62,13 @@ const NavBar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/displays" className="text-foreground/80 hover:text-foreground transition-colors">
+          <Link to="/displays" className="text-foreground hover:text-primary font-medium transition-colors">
             Displays
           </Link>
-          <Link to="/sequences" className="text-foreground/80 hover:text-foreground transition-colors">
+          <Link to="/sequences" className="text-foreground hover:text-primary font-medium transition-colors">
             Sequences
           </Link>
-          <Link to="/leaderboard" className="text-foreground/80 hover:text-foreground transition-colors">
+          <Link to="/leaderboard" className="text-foreground hover:text-primary font-medium transition-colors">
             Leaderboard
           </Link>
         </nav>
