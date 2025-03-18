@@ -24,7 +24,55 @@ const SequenceDetail: React.FC = () => {
   
   useEffect(() => {
     if (id) {
-      const sequenceData = getSequenceDetails(id);
+      // For IDs that look like they're generated from song titles (from DisplayYearContent)
+      const isFromDisplayHistory = id.length === 8 && !id.includes('-');
+      
+      let sequenceData;
+      
+      if (isFromDisplayHistory) {
+        // Create a mock sequence data for display history songs
+        // In a real app, you would fetch this from the API
+        sequenceData = {
+          id: id,
+          title: 'Holiday Light Sequence',
+          displayName: 'Winter Wonderland Symphony',
+          displayId: 1, // Link back to the original display
+          imageUrl: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
+          price: 19.99,
+          rating: 4.8,
+          downloads: 156,
+          software: 'xLights',
+          song: {
+            title: 'Carol of the Bells', // This would be dynamic in a real app
+            artist: 'Trans-Siberian Orchestra',
+            genre: 'Rock',
+            yearIntroduced: 2021 // The year it was introduced to the display
+          },
+          videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          description: 'This sequence was created for the Winter Wonderland Symphony display in 2021. It features over 15,000 lights synchronized to Carol of the Bells by Trans-Siberian Orchestra.',
+          createdAt: 'December 15, 2021',
+          creatorName: 'John Johnson',
+          creatorAvatar: 'https://i.pravatar.cc/150?img=1',
+          display: {
+            id: '1',
+            title: 'Winter Wonderland Symphony',
+            location: 'Seattle, WA',
+            schedule: 'Nov 25 - Jan 5 • 5-10pm',
+            rating: 4.9
+          },
+          seller: {
+            id: 'user-1',
+            name: 'John Johnson',
+            avatar: 'https://i.pravatar.cc/150?img=1',
+            rating: 4.9,
+            sequencesCount: 12,
+            joinedDate: 'November 2021'
+          }
+        };
+      } else {
+        sequenceData = getSequenceDetails(id);
+      }
+      
       setSequence(sequenceData);
       
       if (sequenceData) {
@@ -38,22 +86,30 @@ const SequenceDetail: React.FC = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="animate-pulse text-xl">Loading sequence details...</div>
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-pulse text-xl">Loading sequence details...</div>
+        </main>
+        <Footer />
       </div>
     );
   }
   
   if (!sequence) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-xl">Sequence not found</div>
-        <Link to="/">
-          <Button className="mt-4">
-            <ArrowLeft className="mr-2" size={16} />
-            Return Home
-          </Button>
-        </Link>
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-grow flex flex-col items-center justify-center p-6">
+          <div className="text-xl mb-4">Sequence not found</div>
+          <Link to="/">
+            <Button className="mt-4">
+              <ArrowLeft className="mr-2" size={16} />
+              Return Home
+            </Button>
+          </Link>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -86,6 +142,7 @@ const SequenceDetail: React.FC = () => {
                 isFavorite={isFavorite}
                 onToggleFavorite={() => setIsFavorite(!isFavorite)}
                 displayName={sequence.displayName}
+                displayId={sequence.displayId}
               />
               
               <DisplayInfo 

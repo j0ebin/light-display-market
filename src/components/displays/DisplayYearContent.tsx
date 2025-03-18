@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   AccordionContent, 
   AccordionItem, 
@@ -16,7 +18,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { AlertCircle, Music, Image, Video, Download, Tag } from 'lucide-react';
+import { AlertCircle, Music, Image, Video, Download, ExternalLink } from 'lucide-react';
 import { DisplayYear, DisplayMedia, DisplaySong } from '@/types/displayHistory';
 import { 
   fetchYearMedia, 
@@ -24,6 +26,10 @@ import {
   mockDisplayMedia, 
   mockDisplaySongs 
 } from '@/utils/displayHistoryUtils';
+
+// Global cache for media and songs data
+const mediaCache: Record<string, DisplayMedia[]> = {};
+const songsCache: Record<string, DisplaySong[]> = {};
 
 interface DisplayYearContentProps {
   year: DisplayYear;
@@ -34,8 +40,23 @@ const DisplayYearContent: React.FC<DisplayYearContentProps> = ({ year }) => {
   const [songs, setSongs] = useState<DisplaySong[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Generate sequence IDs for songs
+  const getSequenceIdForSong = useMemo(() => (song: DisplaySong) => {
+    // Create a deterministic ID based on song title and artist
+    const baseString = `${song.title}-${song.artist}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return baseString.substring(0, 8);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
+      // Check if data is already in cache
+      if (mediaCache[year.id] && songsCache[year.id]) {
+        setMedia(mediaCache[year.id]);
+        setSongs(songsCache[year.id]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
         // Fetch real data from Supabase
@@ -43,14 +64,27 @@ const DisplayYearContent: React.FC<DisplayYearContentProps> = ({ year }) => {
         const songsData = await fetchYearSongs(year.id);
         
         // If no real data, use mock data for development
-        setMedia(mediaData.length > 0 ? mediaData : mockDisplayMedia[year.id] || []);
-        setSongs(songsData.length > 0 ? songsData : mockDisplaySongs[year.id] || []);
+        const finalMedia = mediaData.length > 0 ? mediaData : mockDisplayMedia[year.id] || [];
+        const finalSongs = songsData.length > 0 ? songsData : mockDisplaySongs[year.id] || [];
+        
+        // Store in cache
+        mediaCache[year.id] = finalMedia;
+        songsCache[year.id] = finalSongs;
+        
+        setMedia(finalMedia);
+        setSongs(finalSongs);
       } catch (error) {
         console.error('Error fetching year data:', error);
         
         // Fallback to mock data on error
-        setMedia(mockDisplayMedia[year.id] || []);
-        setSongs(mockDisplaySongs[year.id] || []);
+        const fallbackMedia = mockDisplayMedia[year.id] || [];
+        const fallbackSongs = mockDisplaySongs[year.id] || [];
+        
+        mediaCache[year.id] = fallbackMedia;
+        songsCache[year.id] = fallbackSongs;
+        
+        setMedia(fallbackMedia);
+        setSongs(fallbackSongs);
       } finally {
         setIsLoading(false);
       }
@@ -150,10 +184,11 @@ const DisplayYearContent: React.FC<DisplayYearContentProps> = ({ year }) => {
                     {songs.map((song) => (
                       <TableRow key={song.id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center">
+                          <Link to={`/sequence/${getSequenceIdForSong(song)}`} className="flex items-center hover:text-primary hover:underline">
                             <Music className="mr-2" size={16} />
                             {song.title}
-                          </div>
+                            <ExternalLink size={14} className="ml-2 opacity-50" />
+                          </Link>
                         </TableCell>
                         <TableCell>{song.artist}</TableCell>
                         <TableCell>
@@ -169,14 +204,16 @@ const DisplayYearContent: React.FC<DisplayYearContentProps> = ({ year }) => {
                         </TableCell>
                         <TableCell>
                           {song.sequence_available ? (
-                            <Button size="sm" variant="outline" className="h-8">
-                              <Download className="mr-2" size={14} />
-                              {song.sequence_price ? (
-                                <span>${song.sequence_price.toFixed(2)}</span>
-                              ) : (
-                                <span>Free</span>
-                              )}
-                            </Button>
+                            <Link to={`/sequence/${getSequenceIdForSong(song)}`}>
+                              <Button size="sm" variant="outline" className="h-8">
+                                <Download className="mr-2" size={14} />
+                                {song.sequence_price ? (
+                                  <span>${song.sequence_price.toFixed(2)}</span>
+                                ) : (
+                                  <span>Free</span>
+                                )}
+                              </Button>
+                            </Link>
                           ) : (
                             <Badge variant="outline" className="bg-muted">
                               Not available

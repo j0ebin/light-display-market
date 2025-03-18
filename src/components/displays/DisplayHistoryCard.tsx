@@ -41,12 +41,11 @@ const DisplayHistoryCard: React.FC<DisplayHistoryCardProps> = ({ displayId, year
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={defaultYear} className="w-full">
-          <TabsList className="w-full overflow-x-auto flex flex-nowrap justify-start py-2">
+          <TabsList className="grid grid-cols-4 w-full">
             {sortedYears.map((year) => (
               <TabsTrigger
                 key={year.id}
                 value={year.year.toString()}
-                className="flex-shrink-0"
               >
                 {year.year}
               </TabsTrigger>

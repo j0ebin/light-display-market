@@ -12,10 +12,12 @@ export interface Sequence {
     title: string;
     artist: string;
     genre?: string;
+    yearIntroduced?: number;
   };
   creatorName: string;
   creatorAvatar: string;
   channelCount?: number; // For LOR sequences
+  displayId?: number; // Reference to the original display
 }
 
 export interface SequenceDetail extends Sequence {

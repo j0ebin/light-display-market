@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Star, Download, Music, Calendar, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Star, Download, Music, Calendar, Heart, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,12 +19,14 @@ interface SequenceInfoProps {
     title: string;
     artist: string;
     genre?: string;
+    yearIntroduced?: number;
   };
   channelCount?: number;
   createdAt: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
   displayName: string;
+  displayId?: number;
 }
 
 const SequenceInfo: React.FC<SequenceInfoProps> = ({
@@ -37,7 +40,8 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
   createdAt,
   isFavorite,
   onToggleFavorite,
-  displayName
+  displayName,
+  displayId
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -62,7 +66,17 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
       <div className="flex justify-between items-start mb-4">
         <div>
           <h1 className="text-3xl font-bold">{song.title}</h1>
-          <p className="text-lg text-muted-foreground mt-1">{displayName}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Link to={displayId ? `/display/${displayId}` : '#'} className="text-lg text-muted-foreground hover:text-primary hover:underline flex items-center">
+              {displayName}
+              {displayId && <ExternalLink size={14} className="ml-1 opacity-70" />}
+            </Link>
+            {song.yearIntroduced && (
+              <Badge variant="outline" className="ml-1">
+                Added in {song.yearIntroduced}
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center mt-2 space-x-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
               {software}
