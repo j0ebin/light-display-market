@@ -25,6 +25,9 @@ const NavBar = () => {
       }
     };
 
+    // Initial state - set background for index page
+    setIsScrolled(true);
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -85,18 +88,7 @@ const NavBar = () => {
             <Heart size={18} />
           </Button>
           
-          {user ? (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="rounded-full"
-              onClick={handleSignOut}
-            >
-              <LogOut size={18} />
-            </Button>
-          ) : (
-            <AuthPopover />
-          )}
+          <AuthPopover />
         </div>
 
         {/* Mobile Menu Button */}
@@ -150,18 +142,22 @@ const NavBar = () => {
             <Button variant="outline" className="w-full justify-start">
               <Heart size={18} className="mr-2" /> Favorites
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <User size={18} className="mr-2" /> Profile
-            </Button>
             
             {user ? (
-              <Button 
-                variant="default" 
-                className="w-full mt-4"
-                onClick={handleSignOut}
-              >
-                <LogOut size={18} className="mr-2" /> Sign Out
-              </Button>
+              <>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <User size={18} className="mr-2" /> Profile
+                  </Button>
+                </Link>
+                <Button 
+                  variant="default" 
+                  className="w-full mt-4"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={18} className="mr-2" /> Sign Out
+                </Button>
+              </>
             ) : (
               <AuthDialog triggerClassName="w-full mt-4" />
             )}
