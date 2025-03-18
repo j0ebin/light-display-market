@@ -15,8 +15,11 @@ import DisplayScheduleCard from '@/components/displays/DisplayScheduleCard';
 import DisplayDetailsCard from '@/components/displays/DisplayDetailsCard';
 import DisplayOwnerCard from '@/components/displays/DisplayOwnerCard';
 import DisplaySequencesCard from '@/components/displays/DisplaySequencesCard';
+import DisplayHistoryCard from '@/components/displays/DisplayHistoryCard';
 import { supabase } from "@/integrations/supabase/client";
 import { Display } from '@/types/sequence';
+import { DisplayYear } from '@/types/displayHistory';
+import { mockDisplayYears } from '@/utils/displayHistoryUtils';
 
 // Mock display for development - will be replaced with Supabase data
 const mockDisplay: Display & { rating: number; songCount: number } = {
@@ -50,6 +53,7 @@ const mockDisplay: Display & { rating: number; songCount: number } = {
 const DisplayDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [display, setDisplay] = useState<(Display & { rating: number; songCount: number }) | null>(null);
+  const [displayYears, setDisplayYears] = useState<DisplayYear[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -64,20 +68,36 @@ const DisplayDetail: React.FC = () => {
       //   .eq('id', id)
       //   .single();
       
-      // if (error) {
-      //   console.error('Error fetching display:', error);
-      //   setIsLoading(false);
-      //   return;
-      // }
-      
       // Add mock data for development
       setTimeout(() => {
         setDisplay(mockDisplay);
         setIsLoading(false);
       }, 500);
     };
+
+    const fetchDisplayYears = async () => {
+      try {
+        // In a real implementation, fetch from Supabase
+        // const { data, error } = await supabase
+        //   .from('display_years')
+        //   .select('*')
+        //   .eq('display_id', id)
+        //   .order('year', { ascending: false });
+        
+        // if (error) {
+        //   console.error('Error fetching display years:', error);
+        //   return;
+        // }
+        
+        // Mock data for development
+        setDisplayYears(mockDisplayYears);
+      } catch (error) {
+        console.error('Error fetching display years:', error);
+      }
+    };
     
     fetchDisplay();
+    fetchDisplayYears();
   }, [id]);
   
   if (isLoading) {
@@ -160,6 +180,12 @@ const DisplayDetail: React.FC = () => {
                   />
                 </div>
               </div>
+              
+              {/* Display History Section */}
+              <DisplayHistoryCard 
+                displayId={display.id}
+                years={displayYears}
+              />
             </div>
             
             {/* Right column - Map, Owner, Related */}

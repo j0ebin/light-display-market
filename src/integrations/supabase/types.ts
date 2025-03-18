@@ -9,6 +9,136 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      display_media: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_year_id: string | null
+          id: string
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_year_id?: string | null
+          id?: string
+          type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_year_id?: string | null
+          id?: string
+          type?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "display_media_display_year_id_fkey"
+            columns: ["display_year_id"]
+            isOneToOne: false
+            referencedRelation: "display_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      display_songs: {
+        Row: {
+          artist: string
+          created_at: string
+          display_year_id: string | null
+          id: string
+          reused_from: string | null
+          sequence_available: boolean | null
+          sequence_file_url: string | null
+          sequence_price: number | null
+          title: string
+          updated_at: string
+          year_introduced: number
+        }
+        Insert: {
+          artist: string
+          created_at?: string
+          display_year_id?: string | null
+          id?: string
+          reused_from?: string | null
+          sequence_available?: boolean | null
+          sequence_file_url?: string | null
+          sequence_price?: number | null
+          title: string
+          updated_at?: string
+          year_introduced: number
+        }
+        Update: {
+          artist?: string
+          created_at?: string
+          display_year_id?: string | null
+          id?: string
+          reused_from?: string | null
+          sequence_available?: boolean | null
+          sequence_file_url?: string | null
+          sequence_price?: number | null
+          title?: string
+          updated_at?: string
+          year_introduced?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "display_songs_display_year_id_fkey"
+            columns: ["display_year_id"]
+            isOneToOne: false
+            referencedRelation: "display_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "display_songs_reused_from_fkey"
+            columns: ["reused_from"]
+            isOneToOne: false
+            referencedRelation: "display_songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      display_years: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_id: number | null
+          id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_id?: number | null
+          id?: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_id?: number | null
+          id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "display_years_display_id_fkey"
+            columns: ["display_id"]
+            isOneToOne: false
+            referencedRelation: "displays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       displays: {
         Row: {
           created_at: string
