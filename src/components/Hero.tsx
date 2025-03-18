@@ -4,9 +4,12 @@ import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -15,6 +18,17 @@ const Hero = () => {
     const img = new Image();
     img.src = "https://images.unsplash.com/photo-1576692155415-95f820a2c4c1?q=80&w=2080";
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleNearMeClick = () => {
+    navigate('/displays');
+  };
 
   return (
     <section className="relative h-[90vh] flex items-center overflow-hidden">
@@ -53,20 +67,26 @@ const Hero = () => {
             Explore, share, and discover amazing holiday light spectacles in your neighborhood. Connect with display creators and their synchronized light sequences.
           </p>
           
-          <div className="w-full max-w-lg bg-white/10 backdrop-blur-xl border border-white/20 p-1 rounded-full flex items-center">
+          <form onSubmit={handleSearch} className="w-full max-w-lg bg-white/10 backdrop-blur-xl border border-white/20 p-1 rounded-full flex items-center">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" size={18} />
               <Input 
                 placeholder="Search for displays..." 
                 className="border-0 bg-transparent pl-10 text-white placeholder:text-white/60 focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button className="rounded-full ml-1 px-4">
+            <Button type="submit" className="rounded-full ml-1 px-4">
               <Search size={18} className="mr-2" /> Search
             </Button>
-          </div>
+          </form>
           
-          <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20 rounded-full">
+          <Button 
+            variant="outline" 
+            className="bg-white/10 text-white border-white/20 hover:bg-white/20 rounded-full"
+            onClick={handleNearMeClick}
+          >
             <MapPin size={18} className="mr-2" /> Displays Near Me
           </Button>
         </div>

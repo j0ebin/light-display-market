@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -52,14 +53,27 @@ const sequencesByCategory: Record<string, Sequence[]> = {
 };
 
 const Sequences = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  
   const [activeCategory, setActiveCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+
+  // Update search query when URL params change
+  useEffect(() => {
+    setSearchQuery(initialQuery);
+  }, [initialQuery]);
 
   // Filter sequences based on search
   const filteredSequences = sequencesByCategory[activeCategory].filter(sequence => 
     sequence.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sequence.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchParams(searchQuery ? { q: searchQuery } : {});
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -76,7 +90,7 @@ const Sequences = () => {
           </div>
           
           {/* Search bar */}
-          <div className="mb-8 flex flex-col sm:flex-row gap-4">
+          <form onSubmit={handleSearch} className="mb-8 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input 
@@ -86,6 +100,10 @@ const Sequences = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button type="submit" variant="outline" className="py-6 px-4 flex items-center gap-2">
+              <Search size={18} />
+              <span>Search</span>
+            </Button>
             <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
               <DollarSign size={18} />
               <span>Price Range</span>
@@ -94,7 +112,7 @@ const Sequences = () => {
               <SortDesc size={18} />
               <span>Sort By</span>
             </Button>
-          </div>
+          </form>
           
           {/* Categories */}
           <Tabs defaultValue="all" className="mb-8" value={activeCategory} onValueChange={setActiveCategory}>

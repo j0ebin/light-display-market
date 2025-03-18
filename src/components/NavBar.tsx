@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, MapPin, Heart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -8,12 +8,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthPopover from '@/components/auth/AuthPopover';
 import AuthDialog from '@/components/auth/AuthDialog';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(true); // Always start with true
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
@@ -40,6 +45,15 @@ const NavBar = () => {
       description: "You have been signed out successfully.",
     });
     setIsMobileMenuOpen(false);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchOpen(false);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
   };
 
   return (
@@ -75,10 +89,29 @@ const NavBar = () => {
 
         {/* Desktop Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Search size={18} />
-          </Button>
-          <Button variant="outline" size="icon" className="rounded-full">
+          <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <Search size={18} />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Input 
+                    className="pl-10" 
+                    placeholder="Search displays or sequences..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <Button type="submit">Search</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="icon" className="rounded-full" onClick={() => navigate('/displays')}>
             <MapPin size={18} />
           </Button>
           <Button variant="outline" size="icon" className="rounded-full">
@@ -130,10 +163,32 @@ const NavBar = () => {
           </Link>
           
           <div className="flex flex-col space-y-4 mt-8">
-            <Button variant="outline" className="w-full justify-start">
-              <Search size={18} className="mr-2" /> Search
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                setIsMobileMenuOpen(false);
+                setSearchQuery('');
+              }
+            }}>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Input 
+                    placeholder="Search..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button type="submit">Search</Button>
+              </div>
+            </form>
+            
+            <Button variant="outline" className="w-full justify-start" onClick={() => {
+              navigate('/displays');
+              setIsMobileMenuOpen(false);
+            }}>
               <MapPin size={18} className="mr-2" /> Near Me
             </Button>
             <Button variant="outline" className="w-full justify-start">

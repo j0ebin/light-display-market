@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
 import Displays from '@/pages/Displays';
 import Sequences from '@/pages/Sequences';
+import SearchResults from '@/pages/SearchResults';
 import DisplayDetail from '@/pages/DisplayDetail';
 import SequenceDetail from '@/pages/SequenceDetail';
 import OwnerProfile from '@/pages/OwnerProfile';
@@ -23,6 +24,7 @@ function App() {
           <Route path="/display/:id" element={<DisplayDetail />} />
           <Route path="/sequences" element={<Sequences />} />
           <Route path="/sequence/:id" element={<SequenceDetail />} />
+          <Route path="/search" element={<SearchResults />} />
           <Route path="/owner/:id" element={<OwnerProfile />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
