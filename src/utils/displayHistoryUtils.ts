@@ -31,7 +31,11 @@ export const fetchYearMedia = async (yearId: string): Promise<DisplayMedia[]> =>
     return [];
   }
   
-  return data || [];
+  // Ensure correct typing of media data
+  return (data || []).map(item => ({
+    ...item,
+    type: item.type as 'image' | 'video'
+  }));
 };
 
 // Fetch songs for a specific year
@@ -69,13 +73,17 @@ export const fetchYearSongs = async (yearId: string): Promise<DisplaySong[]> => 
 // Update the DisplayYearContent component to use the real data
 export const seedDisplayHistory = async (): Promise<{ success: boolean; message: string }> => {
   try {
+    // Get the current session
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token || '';
+    
     const response = await fetch(
       'https://vhaizqhkodqyqplpqcss.supabase.co/functions/v1/seed-display-history',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession()?.data?.session?.access_token || ''}`
+          'Authorization': `Bearer ${accessToken}`
         }
       }
     );
