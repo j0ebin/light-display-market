@@ -38,6 +38,5 @@ enable_signup = true
 [realtime]
 enabled = true
 
-[edge_functions]
-[edge_functions.seed-display-history]
-verify_jwt = false
+[functions]
+seed-display-history = {}
