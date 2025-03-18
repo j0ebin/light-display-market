@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SequenceCard from '@/components/sequences/SequenceCard';
 import DisplayCard from '@/components/displays/DisplayCard';
 import { mockSequences } from '@/data/mockSequences';
-import { mockDisplays } from '@/data/mockDisplaysData';
+import { mockDisplaysData } from '@/data/mockDisplaysData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Heart } from 'lucide-react';
 
@@ -51,7 +51,7 @@ const Favorites = () => {
     favoriteSequences.includes(sequence.id)
   );
 
-  const filteredDisplays = mockDisplays.filter(display => 
+  const filteredDisplays = mockDisplaysData.filter(display => 
     favoriteDisplays.includes(display.id)
   );
 
