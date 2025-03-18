@@ -3,12 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Display } from '@/types/sequence';
-import DisplayCard from '@/components/displays/DisplayCard';
-import { Search, MapPin, Filter } from 'lucide-react';
+import { mockDisplaysData } from '@/data/mockDisplaysData';
+import DisplaySearchBar from '@/components/displays/DisplaySearchBar';
+import DisplayCategories from '@/components/displays/DisplayCategories';
 
 // Mock display categories
 const categories = [
@@ -144,62 +142,18 @@ const Displays = () => {
             </p>
           </div>
           
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="mb-8 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              <Input 
-                placeholder="Search displays by name, location, or description" 
-                className="pl-10 pr-4 py-6"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button type="submit" variant="outline" className="py-6 px-4 flex items-center gap-2">
-              <Search size={18} />
-              <span>Search</span>
-            </Button>
-            <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
-              <MapPin size={18} />
-              <span>Near Me</span>
-            </Button>
-            <Button variant="outline" className="py-6 px-4 flex items-center gap-2">
-              <Filter size={18} />
-              <span>Filters</span>
-            </Button>
-          </form>
+          <DisplaySearchBar 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+          />
           
-          {/* Categories */}
-          <Tabs defaultValue="all" className="mb-8" value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="bg-muted mb-6 p-1 flex flex-wrap">
-              {categories.map(category => (
-                <TabsTrigger 
-                  key={category.id} 
-                  value={category.id}
-                  className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
-                >
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            {categories.map(category => (
-              <TabsContent key={category.id} value={category.id} className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {displayItems.map(display => (
-                    <DisplayCard key={display.id} display={display} />
-                  ))}
-                </div>
-                
-                {displayItems.length === 0 && (
-                  <div className="text-center py-12">
-                    <h3 className="text-xl font-medium mb-2">No displays found</h3>
-                    <p className="text-muted-foreground">Try adjusting your search or filters</p>
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
+          <DisplayCategories 
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            displayItems={displayItems}
+          />
         </div>
       </main>
       
