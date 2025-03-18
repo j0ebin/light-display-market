@@ -1,6 +1,7 @@
 
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
 import Displays from '@/pages/Displays';
 import DisplayDetail from '@/pages/DisplayDetail';
@@ -14,7 +15,7 @@ import Favorites from '@/pages/Favorites';
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/displays" element={<Displays />} />
@@ -28,7 +29,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </AuthProvider>
   );
 }
 
