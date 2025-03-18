@@ -64,14 +64,14 @@ const SequenceDetail: React.FC = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          <SequenceBreadcrumbs title={sequence.title} />
+          <SequenceBreadcrumbs title={sequence.song.title} />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left column - Video and details */}
             <div className="lg:col-span-2 space-y-8">
               <SequenceVideo 
                 videoUrl={sequence.videoUrl} 
-                title={sequence.title} 
+                title={sequence.song.title} 
               />
               
               <SequenceInfo 
@@ -85,6 +85,7 @@ const SequenceDetail: React.FC = () => {
                 createdAt={sequence.createdAt}
                 isFavorite={isFavorite}
                 onToggleFavorite={() => setIsFavorite(!isFavorite)}
+                displayName={sequence.displayName}
               />
               
               <DisplayInfo 

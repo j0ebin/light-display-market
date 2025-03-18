@@ -4,6 +4,9 @@ import { Star, Download, Music, Calendar, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface SequenceInfoProps {
   title: string;
@@ -20,6 +23,7 @@ interface SequenceInfoProps {
   createdAt: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  displayName: string;
 }
 
 const SequenceInfo: React.FC<SequenceInfoProps> = ({
@@ -32,13 +36,33 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
   channelCount,
   createdAt,
   isFavorite,
-  onToggleFavorite
+  onToggleFavorite,
+  displayName
 }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleFavoriteClick = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save favorites",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    onToggleFavorite();
+  };
+
   return (
     <div>
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-3xl font-bold">{title}</h1>
+          <h1 className="text-3xl font-bold">{song.title}</h1>
+          <p className="text-lg text-muted-foreground mt-1">{displayName}</p>
           <div className="flex items-center mt-2 space-x-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
               {software}
@@ -47,17 +71,13 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
               <Star size={16} className="fill-amber-500 mr-1" />
               <span>{rating}</span>
             </div>
-            <div className="text-muted-foreground text-sm flex items-center">
-              <Download size={14} className="mr-1" />
-              <span>{downloads} downloads</span>
-            </div>
           </div>
         </div>
         <Button
           variant="outline"
           size="icon"
           className="rounded-full"
-          onClick={onToggleFavorite}
+          onClick={handleFavoriteClick}
         >
           <Heart
             size={18}
@@ -77,7 +97,7 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
         <div className="flex items-center">
           <Music size={18} className="text-muted-foreground mr-2" />
           <span>
-            <strong>{song.title}</strong> by <strong>{song.artist}</strong>
+            <strong>{song.artist}</strong>
             {song.genre ? ` • ${song.genre}` : ''}
           </span>
         </div>

@@ -56,6 +56,21 @@ const NavBar = () => {
     }
   };
 
+  const handleFavoriteClick = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to view your favorites",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    navigate('/favorites');
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <header 
       className={cn(
@@ -111,10 +126,20 @@ const NavBar = () => {
               </form>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" size="icon" className="rounded-full" onClick={() => navigate('/displays')}>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full" 
+            onClick={() => navigate('/displays')}
+          >
             <MapPin size={18} />
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full"
+            onClick={handleFavoriteClick}
+          >
             <Heart size={18} />
           </Button>
           
@@ -191,7 +216,7 @@ const NavBar = () => {
             }}>
               <MapPin size={18} className="mr-2" /> Near Me
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={handleFavoriteClick}>
               <Heart size={18} className="mr-2" /> Favorites
             </Button>
             
