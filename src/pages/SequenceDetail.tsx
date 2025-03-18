@@ -80,7 +80,8 @@ const SequenceDetail: React.FC = () => {
                 rating={sequence.rating}
                 downloads={sequence.downloads}
                 description={sequence.description}
-                songCount={sequence.songCount}
+                song={sequence.song}
+                channelCount={sequence.channelCount}
                 createdAt={sequence.createdAt}
                 isFavorite={isFavorite}
                 onToggleFavorite={() => setIsFavorite(!isFavorite)}

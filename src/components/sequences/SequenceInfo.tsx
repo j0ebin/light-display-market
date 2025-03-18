@@ -11,7 +11,12 @@ interface SequenceInfoProps {
   rating: number;
   downloads: number;
   description: string;
-  songCount: number;
+  song: {
+    title: string;
+    artist: string;
+    genre?: string;
+  };
+  channelCount?: number;
   createdAt: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
@@ -23,7 +28,8 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
   rating,
   downloads,
   description,
-  songCount,
+  song,
+  channelCount,
   createdAt,
   isFavorite,
   onToggleFavorite
@@ -70,8 +76,17 @@ const SequenceInfo: React.FC<SequenceInfoProps> = ({
       <div className="border-t pt-6 space-y-4">
         <div className="flex items-center">
           <Music size={18} className="text-muted-foreground mr-2" />
-          <span><strong>{songCount}</strong> songs included</span>
+          <span>
+            <strong>{song.title}</strong> by <strong>{song.artist}</strong>
+            {song.genre ? ` • ${song.genre}` : ''}
+          </span>
         </div>
+        {channelCount && software === 'LOR' && (
+          <div className="flex items-center">
+            <Download size={18} className="text-muted-foreground mr-2" />
+            <span><strong>{channelCount}</strong> channels</span>
+          </div>
+        )}
         <div className="flex items-center">
           <Calendar size={18} className="text-muted-foreground mr-2" />
           <span>Created on <strong>{createdAt}</strong></span>
