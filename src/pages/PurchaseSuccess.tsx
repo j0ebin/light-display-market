@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Download, ChevronRight, Home } from 'lucide-react';
@@ -42,7 +41,7 @@ const PurchaseSuccess: React.FC = () => {
       setIsLoading(true);
       try {
         // Use RPC call to get purchase details with the correct type annotation
-        const { data, error } = await supabase.rpc<PurchaseDetailsResponse>('get_purchase_details', {
+        const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('get_purchase_details', {
           p_user_id: user.id,
           p_sequence_id: id
         });
