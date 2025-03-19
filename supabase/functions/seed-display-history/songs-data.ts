@@ -45,10 +45,15 @@ export const createSongsData = async (supabase: SupabaseClient, year: any) => {
       reused_from: null
     }));
 
-  const { data: songs } = await supabase
+  const { data: songs, error } = await supabase
     .from('display_songs')
     .insert(yearSongs)
     .select();
+
+  if (error) {
+    console.error('Error inserting songs:', error);
+    return [];
+  }
 
   return songs || [];
 };
