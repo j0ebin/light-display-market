@@ -21,6 +21,14 @@ interface PurchaseDetails {
   amountPaid: number;
 }
 
+// Define the type for the response from the get_purchase_details RPC
+interface PurchaseDetailsResponse {
+  id: string;
+  sequence_id: string;
+  amount_paid: number;
+  created_at: string;
+}
+
 const PurchaseSuccess: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -29,28 +37,29 @@ const PurchaseSuccess: React.FC = () => {
   
   useEffect(() => {
     const fetchPurchaseDetails = async () => {
-      if (!user) return;
+      if (!user || !id) return;
       
       setIsLoading(true);
       try {
-        // Use RPC call to get purchase details
-        const { data, error } = await supabase.rpc('get_purchase_details', {
+        // Use RPC call to get purchase details with the correct type annotation
+        const { data, error } = await supabase.rpc<PurchaseDetailsResponse>('get_purchase_details', {
           p_user_id: user.id,
           p_sequence_id: id
         });
           
         if (error) throw error;
         
-        if (data) {
+        if (data && data.length > 0) {
+          const purchaseData = data[0];
           setPurchase({
-            id: data.id,
+            id: purchaseData.id,
             sequence: {
-              id: data.sequence_id,
+              id: purchaseData.sequence_id,
               title: "Holiday Light Sequence", // Replace with actual title from your DB
-              downloadUrl: `/api/sequences/download/${data.sequence_id}` // Replace with actual download URL
+              downloadUrl: `/api/sequences/download/${purchaseData.sequence_id}` // Replace with actual download URL
             },
-            purchaseDate: new Date(data.created_at).toLocaleDateString(),
-            amountPaid: data.amount_paid
+            purchaseDate: new Date(purchaseData.created_at).toLocaleDateString(),
+            amountPaid: purchaseData.amount_paid
           });
         }
       } catch (error) {
