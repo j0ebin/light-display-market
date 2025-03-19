@@ -16,6 +16,12 @@ interface PurchaseCardProps {
   sequenceTitle: string;
 }
 
+// Define the return type for create_purchase function
+interface CreatePurchaseResponse {
+  success: boolean;
+  purchase_id: string;
+}
+
 const PurchaseCard: React.FC<PurchaseCardProps> = ({ 
   price, 
   sequenceId, 
@@ -59,7 +65,7 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
     try {
       // First record the "purchase" of the free item
       // Use RPC call to create purchase instead of direct insert
-      const { error } = await supabase.rpc('create_purchase', {
+      const { error } = await supabase.rpc<CreatePurchaseResponse>('create_purchase', {
         p_user_id: user!.id,
         p_sequence_id: sequenceId,
         p_amount_paid: 0,
