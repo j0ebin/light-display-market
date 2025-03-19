@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -135,7 +136,7 @@ export const generateDummySequences = async (): Promise<{ success: boolean; mess
           // Get the songs we just created for this display
           const { data: createdSongs } = await supabase
             .from('display_songs')
-            .select('id, title, artist, sequence_price, sequence_file_url')
+            .select('id, title, artist, sequence_available, sequence_price, sequence_file_url')
             .eq('display_year_id', firstYear.id);
             
           if (createdSongs) {
