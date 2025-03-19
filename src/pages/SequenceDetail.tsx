@@ -161,7 +161,13 @@ const SequenceDetail: React.FC = () => {
             
             {/* Right column - Purchase/Seller info/Charity */}
             <div className="space-y-6">
-              <PurchaseCard price={sequence.price} />
+              <PurchaseCard 
+                price={sequence.price} 
+                sequenceId={sequence.id}
+                sellerUserId={sequence.seller.id}
+                sequenceTitle={sequence.title}
+              />
+              
               <SellerCard seller={sequence.seller} />
               
               {/* Display charity card if available */}
