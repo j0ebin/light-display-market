@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -12,8 +11,15 @@ import SearchResults from '@/pages/SearchResults';
 import UserProfile from '@/pages/UserProfile';
 import NotFound from '@/pages/NotFound';
 import Favorites from '@/pages/Favorites';
+import { initDummyData } from './utils/initDummyData';
+import { useEffect } from 'react';
 
 function App() {
+  // Initialize dummy data once when the app loads
+  useEffect(() => {
+    initDummyData();
+  }, []);
+
   return (
     <AuthProvider>
       <Routes>

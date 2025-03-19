@@ -8,6 +8,8 @@ import { mockSequences } from '@/data/mockSequences';
 import SequenceSearchBar from '@/components/sequences/SequenceSearchBar';
 import SequenceFilters from '@/components/sequences/SequenceFilters';
 import SequenceCategories from '@/components/sequences/SequenceCategories';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 // Mock sequence categories
 const categories = [
@@ -22,30 +24,98 @@ const categories = [
 // Extract unique genres from sequences
 const allGenres = Array.from(new Set(mockSequences.map(seq => seq.song.genre).filter(Boolean) as string[]));
 
-// Create sequences by category
-const sequencesByCategory: Record<string, Sequence[]> = {
-  all: mockSequences,
-  free: mockSequences.filter(seq => seq.price === 0),
-  xLights: mockSequences.filter(seq => seq.software === 'xLights'),
-  LOR: mockSequences.filter(seq => seq.software === 'LOR'),
-  popular: [...mockSequences].sort((a, b) => b.downloads - a.downloads),
-  recent: [...mockSequences].sort((a, b) => b.id.localeCompare(a.id)),
+// Generate a deterministic sequence ID from song title and artist
+const generateSequenceId = (title: string, artist: string): string => {
+  const baseString = `${title}-${artist}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return baseString.substring(0, 8);
 };
 
 const Sequences = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const displayFilter = searchParams.get('display');
   
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [songFilter, setSongFilter] = useState('');
   const [artistFilter, setArtistFilter] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [combinedSequences, setCombinedSequences] = useState<Sequence[]>([]);
+
+  // Fetch sequences from Supabase
+  const { data: supabaseSequences, isLoading } = useQuery({
+    queryKey: ['supabaseSequences', displayFilter],
+    queryFn: async (): Promise<Sequence[]> => {
+      try {
+        let query = supabase
+          .from('display_songs')
+          .select(`
+            id, title, artist, sequence_price, sequence_file_url, 
+            display_year:display_years(display:displays(id, name))
+          `)
+          .eq('sequence_available', true);
+        
+        // Filter by display if provided
+        if (displayFilter) {
+          query = query.eq('display_year.display.id', displayFilter);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching sequences:', error);
+          return [];
+        }
+        
+        // Transform to Sequence type
+        return (data || []).map(song => ({
+          id: generateSequenceId(song.title, song.artist),
+          title: song.title,
+          displayName: song.display_year?.display?.name || 'Unknown Display',
+          imageUrl: 'https://images.unsplash.com/photo-1482350325005-eda5e677279b?q=80&w=1080',
+          price: song.sequence_price || 0,
+          rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
+          downloads: Math.floor(Math.random() * 300) + 50, // Random download count
+          software: Math.random() > 0.3 ? 'xLights' : 'LOR', // 70% xLights, 30% LOR
+          song: {
+            title: song.title,
+            artist: song.artist,
+            genre: Math.random() > 0.5 ? 'Christmas' : 'Holiday'
+          },
+          creatorName: 'Holiday Lights Pro',
+          creatorAvatar: 'https://i.pravatar.cc/150?img=1',
+          displayId: song.display_year?.display?.id
+        }));
+      } catch (error) {
+        console.error('Error in fetch:', error);
+        return [];
+      }
+    }
+  });
+
+  // Combine mock and real sequences when data changes
+  useEffect(() => {
+    if (supabaseSequences) {
+      // Use real sequences if available, fallback to mock data
+      const sequences = supabaseSequences.length > 0 ? supabaseSequences : mockSequences;
+      setCombinedSequences(sequences);
+    }
+  }, [supabaseSequences]);
 
   // Update search query when URL params change
   useEffect(() => {
     setSearchQuery(initialQuery);
   }, [initialQuery]);
+
+  // Create sequences by category using the combined data
+  const sequencesByCategory = {
+    all: combinedSequences,
+    free: combinedSequences.filter(seq => seq.price === 0),
+    xLights: combinedSequences.filter(seq => seq.software === 'xLights'),
+    LOR: combinedSequences.filter(seq => seq.software === 'LOR'),
+    popular: [...combinedSequences].sort((a, b) => b.downloads - a.downloads),
+    recent: [...combinedSequences].sort((a, b) => b.id.localeCompare(a.id)),
+  };
 
   // Filter sequences based on all filters
   const filteredSequences = sequencesByCategory[activeCategory].filter(sequence => {
@@ -128,12 +198,16 @@ const Sequences = () => {
             />
           </div>
           
-          <SequenceCategories 
-            categories={categories}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            filteredSequences={filteredSequences}
-          />
+          {isLoading ? (
+            <div className="py-8 text-center">Loading sequences...</div>
+          ) : (
+            <SequenceCategories 
+              categories={categories}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              filteredSequences={filteredSequences}
+            />
+          )}
         </div>
       </main>
       
