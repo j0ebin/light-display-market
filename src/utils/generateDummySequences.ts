@@ -95,13 +95,15 @@ export const generateDummySequences = async (): Promise<{ success: boolean; mess
         continue;
       }
       
+      // Store the first year to use later for reused songs
+      const firstYear = years[0];
+      
       // Generate 3 unique songs for this display
       const songs = [];
       for (let i = 0; i < 3; i++) {
         const { title, artist } = getUniqueSong(usedCombinations);
         
         // Assign to earliest year
-        const firstYear = years[0];
         const price = generatePrice();
         
         songs.push({
@@ -147,7 +149,7 @@ export const generateDummySequences = async (): Promise<{ success: boolean; mess
                 artist: song.artist,
                 year_introduced: firstYear.year,
                 reused_from: song.id,
-                sequence_available: true,
+                sequence_available: song.sequence_available,
                 sequence_price: song.sequence_price,
                 sequence_file_url: song.sequence_file_url
               });
