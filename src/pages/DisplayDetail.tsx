@@ -1,9 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import Map from '@/components/maps/Map';
@@ -17,91 +16,31 @@ import DisplaySequencesCard from '@/components/displays/DisplaySequencesCard';
 import DisplayHistoryCard from '@/components/displays/DisplayHistoryCard';
 import CharityCard from '@/components/charity/CharityCard';
 import { useCharity } from '@/hooks/useCharity';
-import { supabase } from "@/integrations/supabase/client";
-import { Display } from '@/types/sequence';
+import { useDisplay } from '@/hooks/useDisplays';
 import { DisplayYear } from '@/types/displayHistory';
 import { mockDisplayYears } from '@/utils/displayHistoryUtils';
 
-const mockDisplay: Display & { rating: number; songCount: number } = {
-  id: 1,
-  name: 'Winter Wonderland Symphony',
-  description: 'A spectacular holiday light display synchronized to music, featuring over 50,000 LED lights programmed to dance to a variety of Christmas classics and contemporary holiday hits. The display includes animated snowflakes, dancing trees, singing faces, and a mesmerizing light tunnel that immerses visitors in a world of color and sound.',
-  location: 'Seattle, WA',
-  latitude: 47.6062,
-  longitude: -122.3321,
-  holiday_type: 'Christmas',
-  display_type: 'Musical Light Show',
-  year_started: 2018,
-  fm_station: '88.1 FM',
-  image_url: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
-  tags: ['musical', 'family-friendly', 'animated', 'synchronized', 'LED'],
-  schedule: {
-    start_date: '2023-11-25',
-    end_date: '2024-01-05',
-    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-    hours: {
-      start: '17:00',
-      end: '22:00'
-    }
-  },
-  created_at: '2023-11-01T00:00:00Z',
-  updated_at: '2023-11-01T00:00:00Z',
-  rating: 4.9,
-  songCount: 12
-};
-
 const DisplayDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [display, setDisplay] = useState<(Display & { rating: number; songCount: number }) | null>(null);
+  const { data: display, isLoading: isLoadingDisplay, error: displayError } = useDisplay(id);
   const [displayYears, setDisplayYears] = useState<DisplayYear[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [songCount, setSongCount] = useState(0);
   const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
   
   useEffect(() => {
-    const fetchDisplay = async () => {
-      setIsLoading(true);
-      
-      // In a real implementation, fetch from Supabase
-      // const { data, error } = await supabase
-      //   .from('displays')
-      //   .select('*')
-      //   .eq('id', id)
-      //   .single();
-      
-      // Add mock data for development
-      setTimeout(() => {
-        setDisplay(mockDisplay);
-        setOwnerId('1'); // Mock owner ID for testing
-        setIsLoading(false);
-      }, 500);
-    };
-
-    const fetchDisplayYears = async () => {
-      try {
-        // In a real implementation, fetch from Supabase
-        // const { data, error } = await supabase
-        //   .from('display_years')
-        //   .select('*')
-        //   .eq('display_id', id)
-        //   .order('year', { ascending: false });
-        
-        // if (error) {
-        //   console.error('Error fetching display years:', error);
-        //   return;
-        // }
-        
-        // Mock data for development
-        setDisplayYears(mockDisplayYears);
-      } catch (error) {
-        console.error('Error fetching display years:', error);
-      }
-    };
+    // For now we'll use mock display years, but in the future we could fetch this from Supabase
+    setDisplayYears(mockDisplayYears);
     
-    fetchDisplay();
-    fetchDisplayYears();
-  }, [id]);
+    // Set a mock owner ID
+    if (display) {
+      setOwnerId('1'); // Mock owner ID for testing
+      setSongCount(Math.floor(Math.random() * 15) + 5); // Random song count between 5-20
+    }
+  }, [display]);
+  
+  const isLoading = isLoadingDisplay;
   
   if (isLoading) {
     return (
@@ -114,16 +53,19 @@ const DisplayDetail: React.FC = () => {
     );
   }
   
-  if (!display) {
+  if (displayError || !display) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
         <main className="flex-grow flex flex-col items-center justify-center p-6">
           <div className="text-xl mb-4">Display not found</div>
-          <Link to="/">
+          <p className="text-muted-foreground mb-4">
+            {displayError ? (displayError as Error).message : "The requested display could not be found."}
+          </p>
+          <Link to="/displays">
             <Button className="mt-4">
               <ArrowLeft className="mr-2" size={16} />
-              Return Home
+              Browse Displays
             </Button>
           </Link>
         </main>
@@ -158,7 +100,7 @@ const DisplayDetail: React.FC = () => {
                 <DisplayHeader 
                   name={display.name}
                   displayType={display.display_type}
-                  rating={display.rating}
+                  rating={4.5} // Mock rating for now
                   holidayType={display.holiday_type}
                   location={display.location}
                   isFavorite={isFavorite}
@@ -179,7 +121,7 @@ const DisplayDetail: React.FC = () => {
                   <DisplayDetailsCard 
                     yearStarted={display.year_started}
                     fmStation={display.fm_station}
-                    songCount={display.songCount}
+                    songCount={songCount}
                   />
                 </div>
               </div>
@@ -195,21 +137,16 @@ const DisplayDetail: React.FC = () => {
             <div className="space-y-6">
               {/* Map with Mapbox */}
               {display.latitude && display.longitude && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Location</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Map 
-                      latitude={display.latitude} 
-                      longitude={display.longitude}
-                      markerTitle={display.name}
-                    />
-                    <div className="mt-4 text-sm">
-                      <div className="font-medium">{display.location}</div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="card-wrapper">
+                  <Map 
+                    latitude={display.latitude} 
+                    longitude={display.longitude}
+                    markerTitle={display.name}
+                  />
+                  <div className="mt-4 text-sm">
+                    <div className="font-medium">{display.location}</div>
+                  </div>
+                </div>
               )}
               
               {/* Display owner card */}

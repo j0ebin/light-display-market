@@ -3,10 +3,15 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import DisplayCard from '@/components/displays/DisplayCard';
-import { mockDisplaysData } from '@/data/mockDisplaysData';
+import { useDisplays, convertToDisplayWithOwner } from '@/hooks/useDisplays';
 
 const FeaturedDisplays = () => {
-  const [displays, setDisplays] = useState(mockDisplaysData);
+  const { data: displays = [], isLoading, error } = useDisplays();
+  
+  // Take the first 3 displays for the featured section
+  const featuredDisplays = displays.slice(0, 3).map(display => 
+    convertToDisplayWithOwner(display)
+  ).filter(Boolean);
   
   return (
     <section className="py-16 px-6">
@@ -24,11 +29,22 @@ const FeaturedDisplays = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {displays.map(display => (
-            <DisplayCard key={display.id} display={display} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-pulse text-xl">Loading featured displays...</div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-destructive">
+            <h3 className="text-xl font-medium mb-2">Error loading displays</h3>
+            <p>{(error as Error).message}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {featuredDisplays.map(display => display && (
+              <DisplayCard key={display.id} display={display} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 text-center">
           <Button className="rounded-full px-8" asChild>
