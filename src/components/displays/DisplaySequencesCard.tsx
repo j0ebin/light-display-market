@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DisplaySong } from '@/types/displayHistory';
+import { seedSequences } from '@/utils/seedSequences';
+import { useToast } from '@/hooks/use-toast';
 
 interface DisplaySequencesCardProps {
   displayId?: number;
+  isAdmin?: boolean;
 }
 
-const DisplaySequencesCard: React.FC<DisplaySequencesCardProps> = ({ displayId }) => {
+const DisplaySequencesCard: React.FC<DisplaySequencesCardProps> = ({ displayId, isAdmin = false }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const { data: sequences, isLoading } = useQuery({
+  const { data: sequences, isLoading, refetch } = useQuery({
     queryKey: ['displaySequences', displayId],
     queryFn: async (): Promise<DisplaySong[]> => {
       if (!displayId) return [];
@@ -51,6 +55,17 @@ const DisplaySequencesCard: React.FC<DisplaySequencesCardProps> = ({ displayId }
     navigate(`/sequences?display=${displayId}`);
   };
   
+  const handleGenerateSequences = async () => {
+    try {
+      const result = await seedSequences();
+      if (result.success) {
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error generating sequences:', error);
+    }
+  };
+  
   // Count unique sequences (removing duplicates from reused songs)
   const uniqueSequences = sequences ? 
     [...new Set(sequences.map(seq => `${seq.title} - ${seq.artist}`))] : [];
@@ -81,11 +96,33 @@ const DisplaySequencesCard: React.FC<DisplaySequencesCardProps> = ({ displayId }
             <Button className="w-full" onClick={handleViewSequences}>
               View Sequences
             </Button>
+            
+            {isAdmin && (
+              <Button 
+                className="w-full mt-2" 
+                variant="outline" 
+                onClick={handleGenerateSequences}
+              >
+                Regenerate Sequences
+              </Button>
+            )}
           </>
         ) : (
-          <p className="text-sm text-muted-foreground mb-4">
-            No sequences available for this display yet.
-          </p>
+          <>
+            <p className="text-sm text-muted-foreground mb-4">
+              No sequences available for this display yet.
+            </p>
+            
+            {isAdmin && (
+              <Button 
+                className="w-full" 
+                variant="outline" 
+                onClick={handleGenerateSequences}
+              >
+                Generate Sequences
+              </Button>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

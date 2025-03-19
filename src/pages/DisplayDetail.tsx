@@ -30,6 +30,9 @@ const DisplayDetail: React.FC = () => {
   const [songCount, setSongCount] = useState(0);
   const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
   
+  // For this demo, we'll set isAdmin to true to allow sequence generation
+  const isAdmin = true;
+  
   useEffect(() => {
     // For now we'll use mock display years, but in the future we could fetch this from Supabase
     setDisplayYears(mockDisplayYears);
@@ -162,7 +165,7 @@ const DisplayDetail: React.FC = () => {
               )}
               
               {/* Related sequences card */}
-              <DisplaySequencesCard displayId={display.id} />
+              <DisplaySequencesCard displayId={display.id} isAdmin={isAdmin} />
             </div>
           </div>
         </div>

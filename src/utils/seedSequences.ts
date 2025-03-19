@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const seedSequences = async (): Promise<{ success: boolean; message: string }> => {
   try {
@@ -7,10 +8,15 @@ export const seedSequences = async (): Promise<{ success: boolean; message: stri
     const { data: sessionData } = await supabase.auth.getSession();
     
     if (!sessionData?.session) {
+      toast.error('No active session found. Please log in first.');
       throw new Error('No active session found');
     }
     
     const accessToken = sessionData.session.access_token;
+    
+    toast.info('Generating sequences for all displays...', {
+      duration: 3000,
+    });
     
     // Call the generate-sequences edge function
     const { data, error } = await supabase.functions.invoke('generate-sequences', {
@@ -22,8 +28,13 @@ export const seedSequences = async (): Promise<{ success: boolean; message: stri
     });
     
     if (error) {
+      toast.error(`Failed to generate sequences: ${error.message}`);
       throw new Error(error.message || 'Failed to generate sequences');
     }
+    
+    toast.success('Sequences generated successfully!', {
+      description: data.message,
+    });
     
     return data;
   } catch (error) {
