@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -161,7 +162,7 @@ const DisplayDetail: React.FC = () => {
               )}
               
               {/* Related sequences card */}
-              <DisplaySequencesCard />
+              <DisplaySequencesCard displayId={display.id} />
             </div>
           </div>
         </div>
