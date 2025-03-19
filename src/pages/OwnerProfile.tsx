@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -12,6 +11,8 @@ import OwnerDisplayCard from '@/components/owners/OwnerDisplayCard';
 import OwnerSequencesList from '@/components/owners/OwnerSequencesList';
 import OwnerAboutTab from '@/components/owners/OwnerAboutTab';
 import OwnerSequencesTab from '@/components/owners/OwnerSequencesTab';
+import CharityCard from '@/components/charity/CharityCard';
+import { useCharity } from '@/hooks/useCharity';
 import { getOwnerById, getDisplayByOwnerId } from '@/data/mockOwnersData';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 import { Owner } from '@/types/owner';
@@ -21,6 +22,7 @@ const OwnerProfile: React.FC = () => {
   const [owner, setOwner] = useState<Owner | null>(null);
   const [display, setDisplay] = useState<DisplayWithOwner | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { charity, isLoading: isLoadingCharity } = useCharity(id);
 
   useEffect(() => {
     if (!id) return;
@@ -78,7 +80,6 @@ const OwnerProfile: React.FC = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Breadcrumbs */}
           <div className="flex items-center mb-8 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
               Home
@@ -91,19 +92,18 @@ const OwnerProfile: React.FC = () => {
             <span className="font-medium truncate">{owner.name}</span>
           </div>
           
-          {/* Owner header */}
           <section className="mb-10">
             <OwnerHeader owner={owner} />
           </section>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main content */}
             <div className="lg:col-span-2">
               <Tabs defaultValue="display">
                 <TabsList className="mb-6">
                   <TabsTrigger value="display">Display</TabsTrigger>
                   <TabsTrigger value="sequences">Sequences</TabsTrigger>
                   <TabsTrigger value="about">About</TabsTrigger>
+                  {charity && <TabsTrigger value="charity">Charity</TabsTrigger>}
                 </TabsList>
                 
                 <TabsContent value="display" className="mt-0">
@@ -123,12 +123,23 @@ const OwnerProfile: React.FC = () => {
                 <TabsContent value="about" className="mt-0">
                   <OwnerAboutTab owner={owner} />
                 </TabsContent>
+                
+                {charity && (
+                  <TabsContent value="charity" className="mt-0">
+                    <h2 className="text-2xl font-semibold mb-6">Supporting Charity</h2>
+                    <div className="max-w-md">
+                      <CharityCard charity={charity} />
+                    </div>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
             
-            {/* Sidebar */}
             <div className="space-y-6">
               <OwnerSocialLinks socialLinks={owner.socialLinks} />
+              {charity && !isLoadingCharity && (
+                <CharityCard charity={charity} variant="compact" />
+              )}
               <OwnerSequencesList ownerId={owner.id} />
             </div>
           </div>

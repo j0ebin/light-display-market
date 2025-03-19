@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Music, Star, Save } from 'lucide-react';
@@ -20,6 +19,9 @@ import { mockDisplaysData } from '@/data/mockDisplaysData';
 import { mockSongsData } from '@/data/mockSongsData';
 import { Song } from '@/types/sequence';
 import { toast } from 'sonner';
+import CharityForm from '@/components/charity/CharityForm';
+import CharityCard from '@/components/charity/CharityCard';
+import { useCharity } from '@/hooks/useCharity';
 
 interface ProfileFormValues {
   fullName: string;
@@ -33,6 +35,8 @@ const UserProfile = () => {
   const [userDisplay, setUserDisplay] = useState(mockDisplaysData[0] || null);
   const [userSongs, setUserSongs] = useState<Record<number, Song[]>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingCharity, setIsEditingCharity] = useState(false);
+  const { charity, isLoading: isLoadingCharity, setCharity } = useCharity(user?.id);
   
   const form = useForm<ProfileFormValues>({
     defaultValues: {
@@ -81,6 +85,11 @@ const UserProfile = () => {
     // Simulate successful save
     toast.success('Profile updated successfully');
     setIsEditing(false);
+  };
+
+  const handleCharitySaved = (savedCharity) => {
+    setCharity(savedCharity);
+    setIsEditingCharity(false);
   };
 
   if (isLoading) {
@@ -214,6 +223,7 @@ const UserProfile = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="display">My Display</TabsTrigger>
               <TabsTrigger value="songs">My Songs</TabsTrigger>
+              <TabsTrigger value="charity">Charity</TabsTrigger>
             </TabsList>
             
             {/* Display Tab */}
@@ -282,6 +292,53 @@ const UserProfile = () => {
                   <p className="text-muted-foreground mb-4">You haven't added any songs to your display yet</p>
                   <Button>Add Your First Song</Button>
                 </div>
+              )}
+            </TabsContent>
+
+            {/* Charity Tab */}
+            <TabsContent value="charity" className="mt-0">
+              <h2 className="text-2xl font-semibold mb-6">Supporting Charity</h2>
+              
+              {isEditingCharity ? (
+                <div className="max-w-2xl">
+                  <CharityForm 
+                    charity={charity} 
+                    userId={user?.id || ''} 
+                    onSaved={handleCharitySaved} 
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="mt-4" 
+                    onClick={() => setIsEditingCharity(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {charity ? (
+                    <div className="max-w-md mb-6">
+                      <CharityCard charity={charity} />
+                      <Button 
+                        variant="outline" 
+                        className="mt-4" 
+                        onClick={() => setIsEditingCharity(true)}
+                      >
+                        Edit Charity Information
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-muted/30 rounded-lg max-w-md">
+                      <h3 className="text-lg font-medium mb-2">No charity yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        You haven't set up a charity for your display yet
+                      </p>
+                      <Button onClick={() => setIsEditingCharity(true)}>
+                        Add a Charity
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
           </Tabs>

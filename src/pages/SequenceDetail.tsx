@@ -12,6 +12,8 @@ import DisplayInfo from '@/components/sequences/DisplayInfo';
 import PurchaseCard from '@/components/sequences/PurchaseCard';
 import SellerCard from '@/components/sequences/SellerCard';
 import RelatedSequences from '@/components/sequences/RelatedSequences';
+import CharityCard from '@/components/charity/CharityCard';
+import { useCharity } from '@/hooks/useCharity';
 import { SequenceDetail as SequenceDetailType } from '@/types/sequence';
 import { getSequenceDetails, getRelatedSequences } from '@/utils/sequenceUtils';
 
@@ -21,6 +23,9 @@ const SequenceDetail: React.FC = () => {
   const [relatedSequences, setRelatedSequences] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // For charity integration
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
   
   useEffect(() => {
     if (id) {
@@ -76,6 +81,9 @@ const SequenceDetail: React.FC = () => {
       setSequence(sequenceData);
       
       if (sequenceData) {
+        // In a real implementation, we would get the owner's ID from the sequence data
+        setOwnerId('1'); // Mock owner ID for testing
+        
         const related = getRelatedSequences(id, sequenceData.displayName);
         setRelatedSequences(related);
       }
@@ -151,10 +159,16 @@ const SequenceDetail: React.FC = () => {
               />
             </div>
             
-            {/* Right column - Purchase/Seller info */}
+            {/* Right column - Purchase/Seller info/Charity */}
             <div className="space-y-6">
               <PurchaseCard price={sequence.price} />
               <SellerCard seller={sequence.seller} />
+              
+              {/* Display charity card if available */}
+              {charity && !isLoadingCharity && (
+                <CharityCard charity={charity} variant="compact" />
+              )}
+              
               <RelatedSequences sequences={relatedSequences} />
             </div>
           </div>

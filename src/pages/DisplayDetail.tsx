@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -16,12 +15,13 @@ import DisplayDetailsCard from '@/components/displays/DisplayDetailsCard';
 import DisplayOwnerCard from '@/components/displays/DisplayOwnerCard';
 import DisplaySequencesCard from '@/components/displays/DisplaySequencesCard';
 import DisplayHistoryCard from '@/components/displays/DisplayHistoryCard';
+import CharityCard from '@/components/charity/CharityCard';
+import { useCharity } from '@/hooks/useCharity';
 import { supabase } from "@/integrations/supabase/client";
 import { Display } from '@/types/sequence';
 import { DisplayYear } from '@/types/displayHistory';
 import { mockDisplayYears } from '@/utils/displayHistoryUtils';
 
-// Mock display for development - will be replaced with Supabase data
 const mockDisplay: Display & { rating: number; songCount: number } = {
   id: 1,
   name: 'Winter Wonderland Symphony',
@@ -56,6 +56,8 @@ const DisplayDetail: React.FC = () => {
   const [displayYears, setDisplayYears] = useState<DisplayYear[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
   
   useEffect(() => {
     const fetchDisplay = async () => {
@@ -71,6 +73,7 @@ const DisplayDetail: React.FC = () => {
       // Add mock data for development
       setTimeout(() => {
         setDisplay(mockDisplay);
+        setOwnerId('1'); // Mock owner ID for testing
         setIsLoading(false);
       }, 500);
     };
@@ -188,7 +191,7 @@ const DisplayDetail: React.FC = () => {
               />
             </div>
             
-            {/* Right column - Map, Owner, Related */}
+            {/* Right column - Map, Owner, Related, Charity */}
             <div className="space-y-6">
               {/* Map with Mapbox */}
               {display.latitude && display.longitude && (
@@ -214,6 +217,11 @@ const DisplayDetail: React.FC = () => {
                 avatarUrl="https://i.pravatar.cc/150?img=1"
                 ownerName="John Doe"
               />
+              
+              {/* Display charity card if available */}
+              {charity && !isLoadingCharity && (
+                <CharityCard charity={charity} variant="compact" />
+              )}
               
               {/* Related sequences card */}
               <DisplaySequencesCard />
