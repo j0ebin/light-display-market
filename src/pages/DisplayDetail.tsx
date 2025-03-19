@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -22,7 +21,8 @@ import { mockDisplayYears } from '@/utils/displayHistoryUtils';
 
 const DisplayDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: display, isLoading: isLoadingDisplay, error: displayError } = useDisplay(id);
+  const parsedId = id ? parseInt(id, 10) : undefined;
+  const { data: display, isLoading: isLoadingDisplay, error: displayError } = useDisplay(parsedId);
   const [displayYears, setDisplayYears] = useState<DisplayYear[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);

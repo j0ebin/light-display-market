@@ -4,6 +4,35 @@ import { supabase } from '@/integrations/supabase/client';
 import { Display } from '@/types/sequence';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 
+// Helper function to transform the database response to match our Display type
+const transformDatabaseResponse = (data: any): Display => {
+  // Parse the schedule if it's a string, or pass through if it's already an object
+  let scheduleObject;
+  if (typeof data.schedule === 'string') {
+    try {
+      scheduleObject = JSON.parse(data.schedule);
+    } catch (e) {
+      scheduleObject = null;
+    }
+  } else {
+    scheduleObject = data.schedule;
+  }
+  
+  return {
+    ...data,
+    // Ensure schedule follows the required structure
+    schedule: scheduleObject ? {
+      start_date: scheduleObject.start_date || '',
+      end_date: scheduleObject.end_date || '',
+      days: scheduleObject.days || [],
+      hours: {
+        start: scheduleObject.hours?.start || '',
+        end: scheduleObject.hours?.end || ''
+      }
+    } : null
+  };
+};
+
 export const useDisplays = () => {
   return useQuery({
     queryKey: ['displays'],
@@ -17,12 +46,13 @@ export const useDisplays = () => {
         throw new Error(error.message);
       }
       
-      return data || [];
+      // Transform each database record to match our Display type
+      return (data || []).map(transformDatabaseResponse);
     }
   });
 };
 
-export const useDisplay = (id: string | number | undefined) => {
+export const useDisplay = (id: number | undefined) => {
   return useQuery({
     queryKey: ['display', id],
     queryFn: async (): Promise<Display | null> => {
@@ -39,7 +69,7 @@ export const useDisplay = (id: string | number | undefined) => {
         throw new Error(error.message);
       }
       
-      return data;
+      return data ? transformDatabaseResponse(data) : null;
     },
     enabled: !!id
   });
