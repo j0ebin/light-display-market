@@ -5,7 +5,7 @@ import { ArrowLeft, ShieldCheck, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
@@ -29,7 +29,6 @@ const Checkout: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [sequence, setSequence] = useState<SequenceDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -50,7 +49,6 @@ const Checkout: React.FC = () => {
       setIsLoading(true);
       try {
         // In a real implementation, this would fetch from your database
-        // This is a mock example
         // Replace with your actual data fetching logic
         const mockSequenceData = {
           id: id,
@@ -69,10 +67,8 @@ const Checkout: React.FC = () => {
         setSequence(mockSequenceData);
       } catch (error) {
         console.error("Error fetching sequence details:", error);
-        toast({
-          title: "Failed to load sequence details",
-          description: "Please try again or contact support.",
-          variant: "destructive",
+        toast.error("Failed to load sequence details", {
+          description: "Please try again or contact support."
         });
       } finally {
         setIsLoading(false);
@@ -80,7 +76,7 @@ const Checkout: React.FC = () => {
     };
     
     fetchSequenceDetails();
-  }, [id, user, navigate, toast]);
+  }, [id, user, navigate]);
   
   const initiateStripeCheckout = async () => {
     if (!sequence || !user) return;
@@ -107,10 +103,8 @@ const Checkout: React.FC = () => {
       window.location.href = data.url;
     } catch (error) {
       console.error("Error creating checkout session:", error);
-      toast({
-        title: "Checkout Failed",
-        description: "Unable to process your payment. Please try again.",
-        variant: "destructive"
+      toast.error("Checkout Failed", {
+        description: "Unable to process your payment. Please try again."
       });
       setIsProcessing(false);
     }

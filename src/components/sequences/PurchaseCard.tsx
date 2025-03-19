@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, DollarSign, ShoppingCart } from 'lucide-react';
+import { Download, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PurchaseCardProps {
@@ -24,7 +25,6 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
 }) => {
   const isFree = price === 0;
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -59,24 +59,22 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
   const handleFreeDownload = async () => {
     try {
       // First record the "purchase" of the free item
-      const { error: purchaseError } = await supabase
-        .from('purchases')
-        .insert({
-          user_id: user.id,
-          sequence_id: sequenceId,
-          amount_paid: 0,
-          seller_id: sellerUserId || null,
-          status: 'completed'
-        });
+      // Use RPC call to create purchase instead of direct insert
+      const { error } = await supabase.rpc('create_purchase', {
+        p_user_id: user!.id,
+        p_sequence_id: sequenceId,
+        p_amount_paid: 0,
+        p_seller_id: sellerUserId || null,
+        p_status: 'completed'
+      });
         
-      if (purchaseError) {
-        throw purchaseError;
+      if (error) {
+        throw error;
       }
       
       // Trigger the download
       // In a real implementation, this would redirect to the actual file
-      toast({
-        title: "Download started",
+      toast.success("Download started", {
         description: "Your sequence is being downloaded."
       });
       
@@ -88,10 +86,8 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
       
     } catch (error) {
       console.error("Error processing free download:", error);
-      toast({
-        title: "Download failed",
-        description: "There was a problem starting your download. Please try again.",
-        variant: "destructive"
+      toast.error("Download failed", {
+        description: "There was a problem starting your download. Please try again."
       });
     }
   };

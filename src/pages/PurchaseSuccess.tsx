@@ -5,7 +5,7 @@ import { CheckCircle, Download, ChevronRight, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
@@ -24,7 +24,6 @@ interface PurchaseDetails {
 const PurchaseSuccess: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [purchase, setPurchase] = useState<PurchaseDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -34,26 +33,15 @@ const PurchaseSuccess: React.FC = () => {
       
       setIsLoading(true);
       try {
-        // In a real implementation, this would fetch from your database
-        // This is a mock example for now
-        // Replace this with your actual database query
-        const { data, error } = await supabase
-          .from('purchases')
-          .select(`
-            id,
-            amount_paid,
-            created_at,
-            sequence_id
-          `)
-          .eq('user_id', user.id)
-          .eq('sequence_id', id)
-          .eq('status', 'completed')
-          .single();
+        // Use RPC call to get purchase details
+        const { data, error } = await supabase.rpc('get_purchase_details', {
+          p_user_id: user.id,
+          p_sequence_id: id
+        });
           
         if (error) throw error;
         
         if (data) {
-          // Mock sequence details - replace with actual fetch
           setPurchase({
             id: data.id,
             sequence: {
@@ -67,10 +55,8 @@ const PurchaseSuccess: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching purchase details:", error);
-        toast({
-          title: "Failed to load purchase details",
-          description: "Please try again or contact support.",
-          variant: "destructive",
+        toast.error("Failed to load purchase details", {
+          description: "Please try again or contact support."
         });
       } finally {
         setIsLoading(false);
@@ -78,16 +64,14 @@ const PurchaseSuccess: React.FC = () => {
     };
     
     fetchPurchaseDetails();
-  }, [id, user, toast]);
+  }, [id, user]);
   
   const handleDownload = async () => {
     if (!purchase) return;
     
     try {
       // In a real implementation, this would trigger the file download
-      // This is a mock example for demonstration
-      toast({
-        title: "Download started",
+      toast.success("Download started", {
         description: "Your sequence is being downloaded."
       });
       
@@ -99,10 +83,8 @@ const PurchaseSuccess: React.FC = () => {
       }
     } catch (error) {
       console.error("Error downloading sequence:", error);
-      toast({
-        title: "Download failed",
-        description: "There was a problem starting your download. Please try again.",
-        variant: "destructive"
+      toast.error("Download failed", {
+        description: "There was a problem starting your download. Please try again."
       });
     }
   };
