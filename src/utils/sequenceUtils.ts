@@ -1,4 +1,3 @@
-
 import { Sequence, SequenceDetail } from "@/types/sequence";
 import { mockSequences } from "@/data/mockSequences";
 import { getSongForSequence } from "@/data/mockSongsData";
@@ -25,67 +24,73 @@ export const getSequenceDetails = (id: string): SequenceDetail | undefined => {
   
   return {
     ...baseSequence,
-    displayId: 1, // Link back to the main display
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Example YouTube embed URL
-    description: 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
-    createdAt: 'November 15, 2023',
+    description: baseSequence.description || 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
+    createdAt: baseSequence.createdAt || new Date().toISOString(),
     display: {
-      id: `display-1`,
-      title: baseSequence.displayName,
-      location: 'Seattle, WA',
-      schedule: 'Nov 25 - Jan 5 • 5-10pm',
-      rating: 4.9
+      id: `display-${baseSequence.displayId}`,
+      title: baseSequence.display.title,
+      location: baseSequence.display.location,
+      schedule: baseSequence.display.schedule,
+      rating: baseSequence.display.rating
     },
     seller: {
-      id: `user-${baseSequence.id}`,
-      name: baseSequence.creatorName,
-      avatar: baseSequence.creatorAvatar,
-      rating: 4.9,
-      sequencesCount: 12,
-      joinedDate: 'November 2021'
+      id: baseSequence.creator.id,
+      name: baseSequence.creator.name,
+      avatar: baseSequence.creator.avatar,
+      rating: baseSequence.creator.rating,
+      sequencesCount: baseSequence.creator.sequencesCount,
+      joinedDate: baseSequence.creator.joinedDate
     }
   };
 };
 
 // Create synthetic sequence details for IDs generated from song titles
 const createSyntheticSequence = (id: string): SequenceDetail => {
-  // In a real app, you would likely fetch this data from an API
-  // This is just a placeholder implementation
+  const song = getSongForSequence(id);
+  
   return {
-    id: id,
-    title: 'Holiday Light Sequence',
-    displayName: 'Winter Wonderland Symphony',
-    displayId: 1,
-    imageUrl: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
-    price: 19.99,
-    rating: 4.8,
-    downloads: 156,
+    id,
+    title: song?.title || 'Holiday Light Sequence',
+    description: 'A spectacular synchronized light show featuring classic Christmas songs. This sequence includes over 20 different effects and is compatible with most standard xLights setups.',
     software: 'xLights',
-    song: {
-      title: 'Carol of the Bells',
-      artist: 'Trans-Siberian Orchestra',
-      genre: 'Rock',
-      yearIntroduced: 2021
-    },
+    rating: 4.8,
+    review_rating: 4.8,
+    downloads: Math.floor(Math.random() * 500) + 100,
+    price: 19.99,
+    channelCount: 32,
+    createdAt: new Date().toISOString(),
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    description: 'This sequence was created for the Winter Wonderland Symphony display in 2021. It features over 15,000 lights synchronized to Carol of the Bells by Trans-Siberian Orchestra.',
-    createdAt: 'December 15, 2021',
-    creatorName: 'John Johnson',
-    creatorAvatar: 'https://i.pravatar.cc/150?img=1',
+    imageUrl: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
+    song: {
+      title: song?.title || 'Unknown Song',
+      artist: song?.artist || 'Various Artists',
+      genre: song?.genre || 'Holiday',
+      yearIntroduced: song?.year
+    },
     display: {
-      id: '1',
+      id: 'display-1',
       title: 'Winter Wonderland Symphony',
       location: 'Seattle, WA',
       schedule: 'Nov 25 - Jan 5 • 5-10pm',
       rating: 4.9
     },
-    seller: {
-      id: 'user-1',
-      name: 'John Johnson',
-      avatar: 'https://i.pravatar.cc/150?img=1',
+    displayName: 'Winter Wonderland Symphony',
+    displayId: 1,
+    creator: {
+      id: 'user-synthetic',
+      name: 'Holiday Lights Pro',
+      avatar: 'https://i.pravatar.cc/150?img=4',
       rating: 4.9,
-      sequencesCount: 12,
-      joinedDate: 'November 2021'
+      sequencesCount: 25,
+      joinedDate: '2021-01-01T00:00:00Z'
+    },
+    seller: {
+      id: 'user-synthetic',
+      name: 'Holiday Lights Pro',
+      avatar: 'https://i.pravatar.cc/150?img=4',
+      rating: 4.9,
+      sequencesCount: 25,
+      joinedDate: '2021-01-01T00:00:00Z'
     }
   };
 };

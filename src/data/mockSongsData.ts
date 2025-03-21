@@ -1,4 +1,3 @@
-
 import { Song } from '@/types/sequence';
 
 export const mockSongsData: Song[] = [
@@ -46,12 +45,12 @@ export const mockSongsData: Song[] = [
 
 // Map sequences to songs (in a real app, this would be a database relationship)
 const sequenceSongMap: Record<string, number> = {
-  "1": 1, // Winter Wonderland sequence uses Carol of the Bells song
-  "2": 3, // Christmas Classics sequence uses All I Want for Christmas Is You song
-  "3": 2  // Dubstep Christmas sequence uses Wizards in Winter song
+  "halleluj": 4, // Hallelujah sequence uses Last Christmas song
+  "decktheh": 5, // Deck the Halls sequence uses Jingle Bell Rock song
+  "wizardsi": 2  // Wizards in Winter sequence uses Wizards in Winter song
 };
 
-export const getSongForSequence = (sequenceId: string): Song => {
-  const songId = sequenceSongMap[sequenceId] || 1; // Default to first song if no mapping
-  return mockSongsData.find(song => song.id === songId) || mockSongsData[0];
+export const getSongForSequence = (sequenceId: string): Song | undefined => {
+  const songId = sequenceSongMap[sequenceId];
+  return mockSongsData.find(song => song.id === songId);
 };
