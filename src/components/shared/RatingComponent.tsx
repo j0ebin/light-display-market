@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,12 +24,16 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
   showRateButton = false,
   onRatingUpdate
 }) => {
-  const [isRating, setIsRating] = useState(false);
+  const [isInteractive, setIsInteractive] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
-  const [userRating, setUserRating] = useState(0);
+  const [currentRating, setCurrentRating] = useState(rating);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setCurrentRating(rating);
+  }, [rating]);
 
   const sizes = {
     sm: { star: 14, text: 'text-xs' },
@@ -47,7 +51,7 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
       navigate('/auth');
       return;
     }
-    setIsRating(true);
+    setIsInteractive(true);
   };
 
   const handleRatingSubmit = async (value: number) => {
@@ -69,8 +73,8 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
 
       if (error) throw error;
 
-      setUserRating(value);
-      setIsRating(false);
+      setCurrentRating(value);
+      setIsInteractive(false);
       if (onRatingUpdate) {
         onRatingUpdate(value);
       }
@@ -89,51 +93,50 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
     }
   };
 
+  const renderStars = () => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <Button
+            key={value}
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "p-0 h-auto hover:bg-transparent",
+              isInteractive ? "cursor-pointer" : "cursor-default"
+            )}
+            onMouseEnter={() => isInteractive && setHoverRating(value)}
+            onMouseLeave={() => isInteractive && setHoverRating(0)}
+            onClick={() => isInteractive && handleRatingSubmit(value)}
+            disabled={!isInteractive && !showRateButton}
+          >
+            <Star
+              size={sizes[size].star}
+              className={cn(
+                "transition-colors",
+                value <= (hoverRating || currentRating)
+                  ? "fill-amber-500 text-amber-500"
+                  : "fill-none text-muted-foreground"
+              )}
+            />
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex items-center gap-1">
-      {isRating ? (
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <Button
-              key={value}
-              variant="ghost"
-              size="sm"
-              className="p-0 h-auto hover:bg-transparent"
-              onMouseEnter={() => setHoverRating(value)}
-              onMouseLeave={() => setHoverRating(0)}
-              onClick={() => handleRatingSubmit(value)}
-            >
-              <Star
-                size={sizes[size].star}
-                className={cn(
-                  "transition-colors",
-                  value <= (hoverRating || userRating)
-                    ? "fill-amber-500 text-amber-500"
-                    : "fill-none text-muted-foreground"
-                )}
-              />
-            </Button>
-          ))}
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center text-amber-500">
-            <Star size={sizes[size].star} className="fill-amber-500" />
-            <span className={cn("font-medium", sizes[size].text)}>
-              {rating.toFixed(1)}
-            </span>
-          </div>
-          {showRateButton && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground ml-2"
-              onClick={handleRateClick}
-            >
-              Rate
-            </Button>
-          )}
-        </>
+    <div className="flex items-center gap-2">
+      {renderStars()}
+      {showRateButton && !isInteractive && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground ml-2"
+          onClick={handleRateClick}
+        >
+          Rate
+        </Button>
       )}
     </div>
   );

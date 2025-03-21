@@ -143,6 +143,10 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
         description: "Thank you for your feedback!",
       });
 
+      // Reset form
+      setReview('');
+      setRating(0);
+
       // Reload reviews
       await loadReviews();
     } catch (error) {
@@ -168,6 +172,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
             itemId={itemId}
             type={type}
             size="lg"
+            showRateButton={false}
             onRatingUpdate={handleRatingChange}
           />
           <span className="text-sm text-muted-foreground">
@@ -175,19 +180,19 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
           </span>
         </div>
         <Textarea
-          placeholder="Write your review (optional, max 200 words)"
+          placeholder="Write your review (optional, max 250 characters)"
           value={review}
           onChange={(e) => {
-            const words = e.target.value.trim().split(/\s+/);
-            if (words.length <= 200) {
+            if (e.target.value.length <= 250) {
               setReview(e.target.value);
             }
           }}
           className="min-h-[100px]"
+          maxLength={250}
         />
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">
-            {review.trim().split(/\s+/).filter(Boolean).length}/200 words
+            {review.length}/250 characters
           </span>
           <Button 
             onClick={handleSubmit}
@@ -219,6 +224,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
                       itemId={itemId}
                       type={type}
                       size="sm"
+                      showRateButton={false}
                     />
                   </div>
                   {review.review_text && (
