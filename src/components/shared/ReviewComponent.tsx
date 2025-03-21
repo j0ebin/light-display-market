@@ -51,6 +51,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
   const [review, setReview] = useState(currentReview);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [showRatingError, setShowRatingError] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
 
   const handleRatingChange = (newRating: number) => {
     setRating(newRating);
+    setShowRatingError(false);
     if (onRatingUpdate) {
       onRatingUpdate(newRating);
     }
@@ -103,7 +105,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
   const handleSubmit = async () => {
     if (!user) {
       toast({
-        title: "Authentication required",
+        title: "Sign in required",
         description: "Please sign in to leave a review",
         variant: "destructive",
       });
@@ -112,11 +114,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
     }
 
     if (rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please select a rating before submitting",
-        variant: "destructive",
-      });
+      setShowRatingError(true);
       return;
     }
 
@@ -146,6 +144,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
       // Reset form
       setReview('');
       setRating(0);
+      setShowRatingError(false);
 
       // Reload reviews
       await loadReviews();
@@ -166,18 +165,25 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
       {/* Review Form */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Leave a Review</h3>
-        <div className="flex items-center gap-4">
-          <RatingComponent
-            rating={rating}
-            itemId={itemId}
-            type={type}
-            size="lg"
-            showRateButton={false}
-            onRatingUpdate={handleRatingChange}
-          />
-          <span className="text-sm text-muted-foreground">
-            {rating > 0 ? `${rating} stars` : 'Select a rating'}
-          </span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <RatingComponent
+              rating={rating}
+              itemId={itemId}
+              type={type}
+              size="lg"
+              onRatingUpdate={handleRatingChange}
+              readOnly={false}
+            />
+            <span className="text-sm text-muted-foreground">
+              {rating > 0 ? `${rating} stars` : 'Select a rating'}
+            </span>
+          </div>
+          {showRatingError && (
+            <p className="text-sm text-destructive">
+              Please select a star rating
+            </p>
+          )}
         </div>
         <Textarea
           placeholder="Write your review (optional, max 250 characters)"
@@ -196,7 +202,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
           </span>
           <Button 
             onClick={handleSubmit}
-            disabled={isSubmitting || rating === 0}
+            disabled={isSubmitting}
           >
             {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </Button>
@@ -224,7 +230,7 @@ const ReviewComponent: React.FC<ReviewComponentProps> = ({
                       itemId={itemId}
                       type={type}
                       size="sm"
-                      showRateButton={false}
+                      readOnly={true}
                     />
                   </div>
                   {review.review_text && (

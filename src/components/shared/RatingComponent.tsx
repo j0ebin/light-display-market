@@ -14,6 +14,7 @@ interface RatingComponentProps {
   size?: 'sm' | 'md' | 'lg';
   showRateButton?: boolean;
   onRatingUpdate?: (newRating: number) => void;
+  readOnly?: boolean;
 }
 
 const RatingComponent: React.FC<RatingComponentProps> = ({
@@ -22,9 +23,9 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
   type,
   size = 'md',
   showRateButton = false,
-  onRatingUpdate
+  onRatingUpdate,
+  readOnly = false
 }) => {
-  const [isInteractive, setIsInteractive] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
   const [currentRating, setCurrentRating] = useState(rating);
   const { user } = useAuth();
@@ -41,55 +42,22 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
     lg: { star: 20, text: 'text-base' }
   };
 
-  const handleRateClick = () => {
+  const handleStarClick = (value: number) => {
+    if (readOnly) return;
+    
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to rate",
+        title: "Sign in required",
+        description: "Please sign in to leave a rating",
         variant: "destructive",
       });
       navigate('/auth');
       return;
     }
-    setIsInteractive(true);
-  };
 
-  const handleRatingSubmit = async (value: number) => {
-    if (!user) return;
-
-    const table = type === 'display' ? 'display_ratings' : 'sequence_ratings';
-    const idField = type === 'display' ? 'display_id' : 'sequence_id';
-
-    try {
-      const { error } = await supabase
-        .from(table)
-        .upsert({
-          [idField]: itemId,
-          user_id: user.id,
-          rating: value
-        }, {
-          onConflict: `${idField},user_id`
-        });
-
-      if (error) throw error;
-
-      setCurrentRating(value);
-      setIsInteractive(false);
-      if (onRatingUpdate) {
-        onRatingUpdate(value);
-      }
-
-      toast({
-        title: "Rating submitted",
-        description: "Thank you for your feedback!",
-      });
-    } catch (error) {
-      console.error('Error submitting rating:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit rating. Please try again.",
-        variant: "destructive",
-      });
+    setCurrentRating(value);
+    if (onRatingUpdate) {
+      onRatingUpdate(value);
     }
   };
 
@@ -103,12 +71,12 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
             size="sm"
             className={cn(
               "p-0 h-auto hover:bg-transparent",
-              isInteractive ? "cursor-pointer" : "cursor-default"
+              !readOnly && "cursor-pointer"
             )}
-            onMouseEnter={() => isInteractive && setHoverRating(value)}
-            onMouseLeave={() => isInteractive && setHoverRating(0)}
-            onClick={() => isInteractive && handleRatingSubmit(value)}
-            disabled={!isInteractive && !showRateButton}
+            onMouseEnter={() => !readOnly && setHoverRating(value)}
+            onMouseLeave={() => !readOnly && setHoverRating(0)}
+            onClick={() => handleStarClick(value)}
+            disabled={readOnly}
           >
             <Star
               size={sizes[size].star}
@@ -116,7 +84,8 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
                 "transition-colors",
                 value <= (hoverRating || currentRating)
                   ? "fill-amber-500 text-amber-500"
-                  : "fill-none text-muted-foreground"
+                  : "fill-none text-muted-foreground",
+                !readOnly && "hover:fill-amber-500 hover:text-amber-500"
               )}
             />
           </Button>
@@ -128,12 +97,12 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
   return (
     <div className="flex items-center gap-2">
       {renderStars()}
-      {showRateButton && !isInteractive && (
+      {showRateButton && (
         <Button
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-foreground ml-2"
-          onClick={handleRateClick}
+          onClick={() => handleStarClick(0)}
         >
           Rate
         </Button>
