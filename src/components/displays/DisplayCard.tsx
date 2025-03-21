@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 import { formatSchedule } from '@/utils/displayUtils';
-import RatingComponent from '@/components/shared/RatingComponent';
+import RatingComponent from '@/components/shared/rating/RatingComponent';
 
 interface DisplayCardProps {
   display: DisplayWithOwner;

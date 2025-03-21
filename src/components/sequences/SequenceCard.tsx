@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Sequence } from '@/types/sequence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import RatingComponent from '@/components/shared/RatingComponent';
+import RatingComponent from '@/components/shared/rating/RatingComponent';
 
 interface SequenceCardProps {
   sequence: Sequence;
@@ -162,16 +162,16 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
         {/* Creator Info and Action Button */}
         <div className="flex items-center justify-between">
           <Link 
-            to={`/profile/${sequence.creatorId}`}
+            to={`/profile/${sequence.creator.id}`}
             className="flex items-center gap-2 hover:text-primary transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <Avatar className="h-6 w-6">
-              <AvatarImage src={sequence.creatorAvatar} alt={sequence.creatorName} />
-              <AvatarFallback>{sequence.creatorName.charAt(0)}</AvatarFallback>
+              <AvatarImage src={sequence.creator.avatar} alt={sequence.creator.name} />
+              <AvatarFallback>{sequence.creator.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {sequence.creatorName}
+              {sequence.creator.name}
             </span>
           </Link>
           

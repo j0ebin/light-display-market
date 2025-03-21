@@ -1,3 +1,5 @@
+import { Charity } from './charity';
+
 export interface Sequence {
   id: string;
   title: string;
@@ -33,12 +35,7 @@ export interface Sequence {
     sequencesCount: number;
     joinedDate: string;
   };
-  charity?: {
-    name: string;
-    description: string;
-    imageUrl: string;
-    donationPercentage: number;
-  };
+  charity?: Charity;
 }
 
 export interface SequenceDetail extends Sequence {

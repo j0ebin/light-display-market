@@ -15,7 +15,7 @@ import CharityCard from '@/components/charity/CharityCard';
 import { useCharity } from '@/hooks/useCharity';
 import { SequenceDetail as SequenceDetailType } from '@/types/sequence';
 import { getSequenceDetails, getRelatedSequences } from '@/utils/sequenceUtils';
-import ReviewComponent from '@/components/shared/ReviewComponent';
+import ReviewComponent from '@/components/shared/review/ReviewComponent';
 import { useToast } from '@/components/ui/use-toast';
 
 const SequenceDetail: React.FC = () => {
@@ -193,7 +193,16 @@ const SequenceDetail: React.FC = () => {
               <SellerCard seller={sequence.creator} />
               
               {sequence.charity && (
-                <CharityCard charity={sequence.charity} />
+                <CharityCard charity={{
+                  id: sequence.charity.id || 'temp-id',
+                  owner_id: sequence.charity.owner_id || 'temp-owner',
+                  name: sequence.charity.name,
+                  description: sequence.charity.description,
+                  url: sequence.charity.url || '',
+                  supporting_text: sequence.charity.supporting_text,
+                  created_at: sequence.charity.created_at || new Date().toISOString(),
+                  updated_at: sequence.charity.updated_at || new Date().toISOString()
+                }} />
               )}
             </div>
           </div>

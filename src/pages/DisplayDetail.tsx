@@ -18,7 +18,7 @@ import { useCharity } from '@/hooks/useCharity';
 import { useDisplay } from '@/hooks/useDisplays';
 import { DisplayYear } from '@/types/displayHistory';
 import { mockDisplayYears } from '@/utils/displayHistoryUtils';
-import ReviewComponent from '@/components/shared/ReviewComponent';
+import ReviewComponent from '@/components/shared/review/ReviewComponent';
 
 const DisplayDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -143,9 +143,9 @@ const DisplayDetail: React.FC = () => {
               <div className="mt-8">
                 <h2 className="text-2xl font-semibold mb-4">Reviews</h2>
                 <ReviewComponent
-                  itemId={display.id}
+                  itemId={display.id.toString()}
                   type="display"
-                  currentRating={display.review_rating}
+                  currentRating={display.rating || 0}
                 />
               </div>
             </div>

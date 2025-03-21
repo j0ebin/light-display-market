@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import RatingComponent from '../shared/RatingComponent';
+import RatingComponent from '@/components/shared/rating/RatingComponent';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { testRatingFunctionality, cleanupTestData } from '@/utils/testRating';
