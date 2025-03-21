@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -16,6 +15,8 @@ import CharityCard from '@/components/charity/CharityCard';
 import { useCharity } from '@/hooks/useCharity';
 import { SequenceDetail as SequenceDetailType } from '@/types/sequence';
 import { getSequenceDetails, getRelatedSequences } from '@/utils/sequenceUtils';
+import ReviewComponent from '@/components/shared/ReviewComponent';
+import { useToast } from '@/components/ui/use-toast';
 
 const SequenceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,9 +24,11 @@ const SequenceDetail: React.FC = () => {
   const [relatedSequences, setRelatedSequences] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPurchased, setIsPurchased] = useState(false);
   // For charity integration
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
+  const { toast } = useToast();
   
   useEffect(() => {
     if (id) {
@@ -91,6 +94,26 @@ const SequenceDetail: React.FC = () => {
       setIsLoading(false);
     }
   }, [id]);
+  
+  const handlePurchase = async () => {
+    if (!sequence) return;
+    
+    try {
+      // Implement purchase logic here
+      setIsPurchased(true);
+      toast({
+        title: "Purchase successful",
+        description: `You have successfully purchased ${sequence.title}`,
+      });
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast({
+        title: "Purchase failed",
+        description: "There was an error processing your purchase",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (isLoading) {
     return (
@@ -160,23 +183,29 @@ const SequenceDetail: React.FC = () => {
             </div>
             
             {/* Right column - Purchase/Seller info/Charity */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               <PurchaseCard 
-                price={sequence.price} 
-                sequenceId={sequence.id}
-                sellerUserId={sequence.seller.id}
-                sequenceTitle={sequence.title}
+                price={sequence.price}
+                isPurchased={isPurchased}
+                onPurchase={handlePurchase}
               />
               
-              <SellerCard seller={sequence.seller} />
+              <SellerCard seller={sequence.creator} />
               
-              {/* Display charity card if available */}
-              {charity && !isLoadingCharity && (
-                <CharityCard charity={charity} variant="compact" />
+              {sequence.charity && (
+                <CharityCard charity={sequence.charity} />
               )}
-              
-              <RelatedSequences sequences={relatedSequences} />
             </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4">Reviews</h2>
+            <ReviewComponent
+              itemId={sequence.id}
+              type="sequence"
+              currentRating={sequence.review_rating}
+            />
           </div>
         </div>
       </main>

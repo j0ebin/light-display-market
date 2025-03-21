@@ -1,27 +1,47 @@
-
 export interface Sequence {
   id: string;
   title: string;
-  displayName: string;
-  imageUrl: string;
-  price: number;
+  description?: string;
+  software: string;
   rating: number;
+  review_rating: number;
   downloads: number;
-  software: 'xLights' | 'LOR';
+  price: number;
+  channelCount?: number;
+  createdAt: string;
+  videoUrl?: string;
+  imageUrl?: string;
   song: {
     title: string;
     artist: string;
     genre?: string;
     yearIntroduced?: number;
   };
-  creatorName: string;
-  creatorAvatar: string;
-  channelCount?: number; // For LOR sequences
-  displayId?: number; // Reference to the original display
+  display: {
+    title: string;
+    location: string;
+    schedule: string;
+    rating: number;
+  };
+  displayName: string;
+  displayId?: number;
+  creator: {
+    id: string;
+    name: string;
+    avatar?: string;
+    rating: number;
+    sequencesCount: number;
+    joinedDate: string;
+  };
+  charity?: {
+    name: string;
+    description: string;
+    imageUrl: string;
+    donationPercentage: number;
+  };
 }
 
 export interface SequenceDetail extends Sequence {
-  videoUrl: string;
   description: string;
   createdAt: string;
   display: {

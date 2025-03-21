@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -73,6 +72,18 @@ const UserProfile = () => {
     setIsEditingCharity(false);
   };
 
+  const handleSongAdded = (newSong: Song) => {
+    // Add the new song to the appropriate year
+    setUserSongs(prevSongs => {
+      const year = newSong.year || new Date().getFullYear();
+      const yearSongs = prevSongs[year] || [];
+      return {
+        ...prevSongs,
+        [year]: [...yearSongs, newSong]
+      };
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -89,53 +100,50 @@ const UserProfile = () => {
       <NavBar />
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          {/* User Header */}
-          <section className="mb-10">
-            {!isEditing ? (
-              <UserProfileHeader 
-                user={user} 
-                userDisplay={userDisplay} 
-                onEditProfile={handleEditProfile} 
-              />
-            ) : (
-              <UserProfileForm 
-                user={user} 
-                onSave={handleSaveProfile} 
-                onCancel={() => setIsEditing(false)} 
-              />
-            )}
-          </section>
+          <UserProfileHeader 
+            user={user}
+            userDisplay={userDisplay}
+            onEditProfile={handleEditProfile}
+          />
           
-          {/* Main Content */}
-          <Tabs defaultValue="display" className="mt-8">
-            <TabsList className="mb-6">
-              <TabsTrigger value="display">My Display</TabsTrigger>
-              <TabsTrigger value="songs">My Songs</TabsTrigger>
-              <TabsTrigger value="charity">Charity</TabsTrigger>
-            </TabsList>
-            
-            {/* Display Tab */}
-            <TabsContent value="display" className="mt-0">
-              <DisplayTab userDisplay={userDisplay} />
-            </TabsContent>
-            
-            {/* Songs Tab */}
-            <TabsContent value="songs" className="mt-0">
-              <SongsTab userSongs={userSongs} />
-            </TabsContent>
+          {isEditing ? (
+            <UserProfileForm 
+              user={user}
+              onSave={handleSaveProfile}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <Tabs defaultValue="display" className="mt-8">
+              <TabsList className="mb-6">
+                <TabsTrigger value="display">My Display</TabsTrigger>
+                <TabsTrigger value="songs">My Songs</TabsTrigger>
+                <TabsTrigger value="charity">Charity</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="display" className="mt-0">
+                <DisplayTab userDisplay={userDisplay} />
+              </TabsContent>
+              
+              <TabsContent value="songs" className="mt-0">
+                <SongsTab 
+                  userSongs={userSongs} 
+                  displayId={userDisplay?.id?.toString() || ''} 
+                  onSongAdded={handleSongAdded}
+                />
+              </TabsContent>
 
-            {/* Charity Tab */}
-            <TabsContent value="charity" className="mt-0">
-              <CharityTab 
-                charity={charity}
-                userId={user?.id || ''}
-                isEditingCharity={isEditingCharity}
-                onEditCharity={() => setIsEditingCharity(true)}
-                onCharitySaved={handleCharitySaved}
-                onCancelEditCharity={() => setIsEditingCharity(false)}
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="charity" className="mt-0">
+                <CharityTab 
+                  charity={charity}
+                  userId={user?.id || ''}
+                  isEditingCharity={isEditingCharity}
+                  onEditCharity={() => setIsEditingCharity(true)}
+                  onCharitySaved={handleCharitySaved}
+                  onCancelEditCharity={() => setIsEditingCharity(false)}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </main>
       <Footer />

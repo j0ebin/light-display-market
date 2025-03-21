@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -19,6 +18,7 @@ import { useCharity } from '@/hooks/useCharity';
 import { useDisplay } from '@/hooks/useDisplays';
 import { DisplayYear } from '@/types/displayHistory';
 import { mockDisplayYears } from '@/utils/displayHistoryUtils';
+import ReviewComponent from '@/components/shared/ReviewComponent';
 
 const DisplayDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -131,10 +131,23 @@ const DisplayDetail: React.FC = () => {
               </div>
               
               {/* Display History Section */}
-              <DisplayHistoryCard 
-                displayId={display.id}
-                years={displayYears}
-              />
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Display History</h2>
+                <DisplayHistoryCard 
+                  displayId={display.id}
+                  years={displayYears}
+                />
+              </div>
+
+              {/* Reviews Section */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Reviews</h2>
+                <ReviewComponent
+                  itemId={display.id}
+                  type="display"
+                  currentRating={display.review_rating}
+                />
+              </div>
             </div>
             
             {/* Right column - Map, Owner, Related, Charity */}

@@ -13,6 +13,7 @@ import NotFound from '@/pages/NotFound';
 import Favorites from '@/pages/Favorites';
 import { initDummyData } from './utils/initDummyData';
 import { useEffect } from 'react';
+import RatingTest from './components/test/RatingTest';
 
 function App() {
   // Initialize dummy data once when the app loads
@@ -32,6 +33,7 @@ function App() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/test/rating" element={<RatingTest />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

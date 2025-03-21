@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,8 +6,9 @@ import { Button } from '@/components/ui/button';
 
 interface SellerCardProps {
   seller: {
+    id: string;
     name: string;
-    avatar: string;
+    avatar?: string;
     rating: number;
     sequencesCount: number;
     joinedDate: string;

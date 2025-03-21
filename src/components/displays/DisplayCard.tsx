@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, Heart, MapPin, Calendar, Music } from 'lucide-react';
+import { Heart, MapPin, Calendar, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DisplayWithOwner } from '@/data/mockDisplaysData';
 import { formatSchedule } from '@/utils/displayUtils';
+import RatingComponent from '@/components/shared/RatingComponent';
 
 interface DisplayCardProps {
   display: DisplayWithOwner;
@@ -17,8 +17,13 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ display }) => {
   const [isFavorite, setIsFavorite] = useState(display.isFavorite);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentRating, setCurrentRating] = useState(display.rating || 0);
 
   const formattedSchedule = formatSchedule(display.schedule);
+
+  const handleRatingUpdate = (newRating: number) => {
+    setCurrentRating(newRating);
+  };
 
   return (
     <div 
@@ -76,10 +81,13 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ display }) => {
       <div className="p-4 space-y-3">
         <div className="flex justify-between items-start">
           <h3 className="font-medium text-xl line-clamp-1">{display.name}</h3>
-          <div className="flex items-center gap-1 text-amber-500">
-            <Star size={16} className="fill-amber-500" />
-            <span className="text-sm font-medium">{display.rating}</span>
-          </div>
+          <RatingComponent
+            rating={currentRating}
+            itemId={display.id.toString()}
+            type="display"
+            size="sm"
+            onRatingUpdate={handleRatingUpdate}
+          />
         </div>
 
         {display.owner && (

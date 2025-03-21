@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music, Download, Star, Heart, Play, Disc2 } from 'lucide-react';
+import { Music, Download, Heart, Play, Disc2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Sequence } from '@/types/sequence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import RatingComponent from '@/components/shared/RatingComponent';
 
 interface SequenceCardProps {
   sequence: Sequence;
@@ -23,6 +23,7 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentRating, setCurrentRating] = useState(sequence.rating);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -46,6 +47,10 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
     if (toggleFavorite) {
       toggleFavorite(sequence.id);
     }
+  };
+
+  const handleRatingUpdate = (newRating: number) => {
+    setCurrentRating(newRating);
   };
 
   return (
@@ -132,10 +137,13 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
             <h3 className="font-medium text-lg line-clamp-1">{sequence.song.title}</h3>
             <p className="text-sm text-muted-foreground">{sequence.displayName}</p>
           </div>
-          <div className="flex items-center gap-1 text-amber-500">
-            <Star size={14} className="fill-amber-500" />
-            <span className="text-xs font-medium">{sequence.rating}</span>
-          </div>
+          <RatingComponent
+            rating={currentRating}
+            itemId={sequence.id}
+            type="sequence"
+            size="sm"
+            onRatingUpdate={handleRatingUpdate}
+          />
         </div>
 
         {/* Song Details */}
@@ -152,40 +160,28 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
         </div>
 
         {/* Creator Info and Action Button */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <Link 
+            to={`/profile/${sequence.creatorId}`}
+            className="flex items-center gap-2 hover:text-primary transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Avatar className="h-6 w-6">
               <AvatarImage src={sequence.creatorAvatar} alt={sequence.creatorName} />
               <AvatarFallback>{sequence.creatorName.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">{sequence.creatorName}</span>
-          </div>
+            <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              {sequence.creatorName}
+            </span>
+          </Link>
           
-          <div className="flex items-center gap-2">
-            {sequence.software === 'LOR' && sequence.channelCount && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Disc2 size={14} />
-                <span>{sequence.channelCount} ch</span>
-              </div>
-            )}
-            
-            <Link to={`/sequence/${sequence.id}`}>
-              <Button 
-                size="sm" 
-                className={cn(
-                  "rounded-full transition-all",
-                  isFree ? "bg-primary/90 hover:bg-primary" : ""
-                )}
-              >
-                <Download size={14} className="mr-1" /> 
-                Download
-              </Button>
-            </Link>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Download size={14} />
+            <span className="text-xs">{sequence.downloads}</span>
           </div>
         </div>
       </div>
       
-      {/* Card overlay for link */}
       <Link to={`/sequence/${sequence.id}`} className="absolute inset-0 z-10" aria-label={`View ${sequence.song.title}`}></Link>
     </div>
   );

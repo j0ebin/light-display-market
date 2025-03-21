@@ -1,18 +1,25 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Clock } from 'lucide-react';
 import { Song } from '@/types/sequence';
+import AddSongForm from './AddSongForm';
 
 interface SongsTabProps {
   userSongs: Record<number, Song[]>;
+  displayId: string;
+  onSongAdded: (song: Song) => void;
 }
 
-const SongsTab: React.FC<SongsTabProps> = ({ userSongs }) => {
+const SongsTab: React.FC<SongsTabProps> = ({ userSongs, displayId, onSongAdded }) => {
+  const [isAddSongOpen, setIsAddSongOpen] = useState(false);
   const years = Object.keys(userSongs).sort((a, b) => Number(b) - Number(a));
+
+  const handleAddSong = (song: Song) => {
+    onSongAdded(song);
+  };
 
   return (
     <>
@@ -20,6 +27,11 @@ const SongsTab: React.FC<SongsTabProps> = ({ userSongs }) => {
       
       {years.length > 0 ? (
         <div className="space-y-8">
+          <div className="flex justify-end">
+            <Button onClick={() => setIsAddSongOpen(true)}>
+              Add New Song
+            </Button>
+          </div>
           {years.map(year => (
             <Card key={year}>
               <CardHeader className="pb-2">
@@ -61,9 +73,16 @@ const SongsTab: React.FC<SongsTabProps> = ({ userSongs }) => {
         <div className="text-center py-10 bg-muted/30 rounded-lg">
           <h3 className="text-lg font-medium mb-2">No songs yet</h3>
           <p className="text-muted-foreground mb-4">You haven't added any songs to your display yet</p>
-          <Button>Add Your First Song</Button>
+          <Button onClick={() => setIsAddSongOpen(true)}>Add Your First Song</Button>
         </div>
       )}
+
+      <AddSongForm
+        isOpen={isAddSongOpen}
+        onClose={() => setIsAddSongOpen(false)}
+        onSongAdded={handleAddSong}
+        displayId={displayId}
+      />
     </>
   );
 };
