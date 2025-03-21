@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { MapPin, Calendar, Music, Edit2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Badge } from '@/components/ui/badge';
-import ReviewComponent from '../shared/ReviewComponent';
+import ReviewComponent from '@/components/shared/review/ReviewComponent';
 import { formatSchedule } from '@/utils/formatters';
 import DisplayEditForm from './DisplayEditForm';
 import DisplayView from './DisplayView';
