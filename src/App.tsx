@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
 import Displays from '@/pages/Displays';
 import DisplayDetail from '@/pages/DisplayDetail';
+import EditDisplay from '@/pages/EditDisplay';
 import OwnerProfile from '@/pages/OwnerProfile';
 import Sequences from '@/pages/Sequences';
 import SequenceDetail from '@/pages/SequenceDetail';
@@ -27,6 +28,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/displays" element={<Displays />} />
         <Route path="/display/:id" element={<DisplayDetail />} />
+        <Route path="/display/edit/:id?" element={<EditDisplay />} />
         <Route path="/owner/:id" element={<OwnerProfile />} />
         <Route path="/sequences" element={<Sequences />} />
         <Route path="/sequence/:id" element={<SequenceDetail />} />

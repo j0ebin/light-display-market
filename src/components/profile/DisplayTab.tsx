@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -29,11 +30,9 @@ interface Display {
 
 const DisplayTab = () => {
   const [display, setDisplay] = useState<Display | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedDisplay, setEditedDisplay] = useState<Display | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -66,91 +65,7 @@ const DisplayTab = () => {
         songCount: data.display_songs?.length || 0
       };
       setDisplay(displayData);
-      setEditedDisplay(displayData);
     }
-  };
-
-  const createDisplay = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      const newDisplay = {
-        user_id: user.id,
-        name: 'My Holiday Display',
-        description: 'Share details about your holiday display!',
-        image_url: '',
-        location: '',
-        schedule: '',
-        display_type: 'Residential',
-        holiday_type: 'Christmas',
-        review_rating: 0,
-      };
-
-      const { data, error } = await supabase
-        .from('displays')
-        .insert([newDisplay])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const displayData = {
-        ...data,
-        songCount: 0
-      };
-
-      setDisplay(displayData);
-      setEditedDisplay(displayData);
-      setIsEditing(true);
-      
-      toast({
-        title: "Success",
-        description: "Display created! Let's customize it.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create display. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleSave = async (updatedDisplay: Partial<Display>) => {
-    if (!editedDisplay || !user) return;
-
-    const { error } = await supabase
-      .from('displays')
-      .update(updatedDisplay)
-      .eq('id', editedDisplay.id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update display. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setDisplay({ ...editedDisplay, ...updatedDisplay });
-    setIsEditing(false);
-    toast({
-      title: "Success",
-      description: "Display updated successfully!",
-    });
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setEditedDisplay(display);
   };
 
   if (!display) {
@@ -158,11 +73,10 @@ const DisplayTab = () => {
       <div className="text-center py-8">
         <p className="text-muted-foreground">Share your display with the community below!</p>
         <Button 
-          className="mt-4" 
-          onClick={createDisplay}
-          disabled={isLoading}
+          className="mt-4"
+          onClick={() => navigate('/display/edit')}
         >
-          {isLoading ? 'Creating...' : 'Create Display'}
+          Create Display
         </Button>
       </div>
     );
@@ -170,38 +84,14 @@ const DisplayTab = () => {
 
   return (
     <div className="space-y-8">
-      {/* Display Header */}
-      <div className="relative">
-        <div className="aspect-[21/9] w-full overflow-hidden rounded-lg">
-          <img
-            src={display.image_url || '/placeholder.svg'}
-            alt={display.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        {!isEditing && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute top-4 right-4"
-            onClick={handleEdit}
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        )}
+      <DisplayView display={display} />
+      <div className="flex justify-end">
+        <Button
+          onClick={() => navigate(`/display/edit/${display.id}`)}
+        >
+          Edit Display
+        </Button>
       </div>
-
-      {/* Display Content */}
-      {isEditing ? (
-        <DisplayEditForm
-          display={editedDisplay!}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          onChange={setEditedDisplay}
-        />
-      ) : (
-        <DisplayView display={display} />
-      )}
 
       {/* Reviews Section */}
       <div className="mt-8">
