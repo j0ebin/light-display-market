@@ -31,6 +31,7 @@ const DisplayTab = () => {
   const [display, setDisplay] = useState<Display | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedDisplay, setEditedDisplay] = useState<Display | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -66,6 +67,55 @@ const DisplayTab = () => {
       };
       setDisplay(displayData);
       setEditedDisplay(displayData);
+    }
+  };
+
+  const createDisplay = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const newDisplay = {
+        user_id: user.id,
+        name: 'My Holiday Display',
+        description: 'Share details about your holiday display!',
+        image_url: '',
+        location: '',
+        schedule: '',
+        display_type: 'Residential',
+        holiday_type: 'Christmas',
+        review_rating: 0,
+      };
+
+      const { data, error } = await supabase
+        .from('displays')
+        .insert([newDisplay])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const displayData = {
+        ...data,
+        songCount: 0
+      };
+
+      setDisplay(displayData);
+      setEditedDisplay(displayData);
+      setIsEditing(true);
+      
+      toast({
+        title: "Success",
+        description: "Display created! Let's customize it.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create display. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,8 +156,14 @@ const DisplayTab = () => {
   if (!display) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">You haven't created a display yet.</p>
-        <Button className="mt-4">Create Display</Button>
+        <p className="text-muted-foreground">Share your display with the community below!</p>
+        <Button 
+          className="mt-4" 
+          onClick={createDisplay}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Creating...' : 'Create Display'}
+        </Button>
       </div>
     );
   }
@@ -118,7 +174,7 @@ const DisplayTab = () => {
       <div className="relative">
         <div className="aspect-[21/9] w-full overflow-hidden rounded-lg">
           <img
-            src={display.image_url}
+            src={display.image_url || '/placeholder.svg'}
             alt={display.name}
             className="w-full h-full object-cover"
           />
