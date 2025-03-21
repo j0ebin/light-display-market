@@ -34,72 +34,88 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      name: display.name,
-      description: display.description,
-      location: display.location,
-      schedule: display.schedule,
-      display_type: display.display_type,
-      holiday_type: display.holiday_type,
+    onSave(display);
+  };
+
+  const handleChange = (field: keyof Display, value: string) => {
+    onChange({
+      ...display,
+      [field]: value,
     });
   };
 
   return (
     <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label>Name</Label>
-          <Input
-            value={display.name}
-            onChange={(e) => onChange({ ...display, name: e.target.value })}
-            required
-          />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Display Name</Label>
+            <Input
+              id="name"
+              value={display.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="Enter display name"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={display.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Enter display description"
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={display.location}
+              onChange={(e) => handleChange('location', e.target.value)}
+              placeholder="Enter display location"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="schedule">Schedule</Label>
+            <Input
+              id="schedule"
+              value={display.schedule}
+              onChange={(e) => handleChange('schedule', e.target.value)}
+              placeholder="Enter display schedule"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="display_type">Display Type</Label>
+            <Input
+              id="display_type"
+              value={display.display_type}
+              onChange={(e) => handleChange('display_type', e.target.value)}
+              placeholder="Enter display type"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="holiday_type">Holiday Type</Label>
+            <Input
+              id="holiday_type"
+              value={display.holiday_type}
+              onChange={(e) => handleChange('holiday_type', e.target.value)}
+              placeholder="Enter holiday type"
+            />
+          </div>
         </div>
-        <div>
-          <Label>Description</Label>
-          <Textarea
-            value={display.description}
-            onChange={(e) => onChange({ ...display, description: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label>Location</Label>
-          <Input
-            value={display.location}
-            onChange={(e) => onChange({ ...display, location: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label>Schedule</Label>
-          <Input
-            value={display.schedule}
-            onChange={(e) => onChange({ ...display, schedule: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label>Display Type</Label>
-          <Input
-            value={display.display_type}
-            onChange={(e) => onChange({ ...display, display_type: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label>Holiday Type</Label>
-          <Input
-            value={display.holiday_type}
-            onChange={(e) => onChange({ ...display, holiday_type: e.target.value })}
-          />
-        </div>
-        <div className="flex justify-end gap-2">
+
+        <div className="flex justify-end space-x-4">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="submit">
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
         </div>

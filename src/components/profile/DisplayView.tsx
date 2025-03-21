@@ -28,33 +28,39 @@ const DisplayView: React.FC<DisplayViewProps> = ({ display }) => {
         <div>
           <h1 className="text-3xl font-bold">{display.name}</h1>
           <div className="flex items-center mt-2 space-x-3">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              {display.display_type}
-            </Badge>
-            {display.holiday_type && (
-              <Badge variant="outline">
-                {display.holiday_type}
-              </Badge>
-            )}
+            <Badge variant="secondary">{display.display_type}</Badge>
+            <Badge variant="secondary">{display.holiday_type}</Badge>
           </div>
         </div>
 
-        <p className="text-muted-foreground">{display.description}</p>
+        <div className="space-y-4">
+          <p className="text-muted-foreground">{display.description}</p>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-muted-foreground" />
+          <div className="flex items-center space-x-2 text-muted-foreground">
+            <MapPin className="w-4 h-4" />
             <span>{display.location}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-muted-foreground" />
+
+          <div className="flex items-center space-x-2 text-muted-foreground">
+            <Calendar className="w-4 h-4" />
             <span>{formatSchedule(display.schedule)}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Music size={16} className="text-muted-foreground" />
+
+          <div className="flex items-center space-x-2 text-muted-foreground">
+            <Music className="w-4 h-4" />
             <span>{display.songCount} songs</span>
           </div>
         </div>
+
+        {display.image_url && (
+          <div className="relative aspect-video rounded-lg overflow-hidden">
+            <img
+              src={display.image_url}
+              alt={display.name}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
