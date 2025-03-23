@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, MapPin, Heart, User, LogOut } from 'lucide-react';
@@ -10,6 +9,7 @@ import AuthDialog from '@/components/auth/AuthDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { CartButton } from '@/components/cart/CartButton';
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(true); // Always start with true
@@ -142,7 +142,7 @@ const NavBar = () => {
           >
             <Heart size={18} />
           </Button>
-          
+          <CartButton />
           <AuthPopover />
         </div>
 
@@ -219,6 +219,10 @@ const NavBar = () => {
             <Button variant="outline" className="w-full justify-start" onClick={handleFavoriteClick}>
               <Heart size={18} className="mr-2" /> Favorites
             </Button>
+            
+            <div className="flex items-center justify-center py-2">
+              <CartButton />
+            </div>
             
             {user ? (
               <>
