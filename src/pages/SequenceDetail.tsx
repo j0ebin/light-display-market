@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -17,6 +18,10 @@ import { SequenceDetail as SequenceDetailType } from '@/types/sequence';
 import { getSequenceDetails, getRelatedSequences } from '@/utils/sequenceUtils';
 import ReviewComponent from '@/components/shared/review/ReviewComponent';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const SequenceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,10 +30,42 @@ const SequenceDetail: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isPurchaseProcessing, setIsPurchaseProcessing] = useState(false);
+  const [isCheckingPurchase, setIsCheckingPurchase] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   // For charity integration
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const { charity, isLoading: isLoadingCharity } = useCharity(ownerId);
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
+  
+  // Check if user has already purchased this sequence
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (!user || !id) {
+        setIsCheckingPurchase(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase.rpc('get_purchase_details', {
+          p_user_id: user.id,
+          p_sequence_id: id
+        });
+        
+        if (error) throw error;
+        
+        setIsPurchased(data && Array.isArray(data) && data.length > 0);
+      } catch (error) {
+        console.error("Error checking purchase status:", error);
+      } finally {
+        setIsCheckingPurchase(false);
+      }
+    };
+    
+    checkPurchaseStatus();
+  }, [id, user]);
   
   useEffect(() => {
     if (id) {
@@ -98,24 +135,68 @@ const SequenceDetail: React.FC = () => {
   const handlePurchase = async () => {
     if (!sequence) return;
     
+    if (!user) {
+      toast.error("Authentication required", {
+        description: "Please sign in to purchase this sequence",
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    setIsPurchaseProcessing(true);
+    
     try {
-      // Implement purchase logic here
+      // In a real implementation, this would call your payment API
+      // For now, we'll create a purchase record directly
+      const { data, error } = await supabase.rpc('create_purchase', {
+        p_user_id: user.id,
+        p_sequence_id: id,
+        p_amount_paid: sequence.price,
+        p_seller_id: sequence.seller.id,
+        p_status: 'completed'
+      });
+      
+      if (error) throw error;
+      
       setIsPurchased(true);
-      toast({
-        title: "Purchase successful",
+      toast.success("Purchase successful", {
         description: `You have successfully purchased ${sequence.title}`,
       });
+      
+      // In a real app, this would redirect to a success page or start download
+      handleDownload();
+      
     } catch (error) {
       console.error('Purchase error:', error);
-      toast({
-        title: "Purchase failed",
+      toast.error("Purchase failed", {
         description: "There was an error processing your purchase",
-        variant: "destructive",
       });
+    } finally {
+      setIsPurchaseProcessing(false);
     }
   };
   
-  if (isLoading) {
+  const handleDownload = () => {
+    if (!sequence) return;
+    
+    // Create a dummy download link - in a real app, this would be a real file
+    const element = document.createElement('a');
+    const file = new Blob(
+      [`This is a mock sequence file for ${sequence.title}`], 
+      {type: 'text/plain'}
+    );
+    element.href = URL.createObjectURL(file);
+    element.download = `${sequence.title.replace(/\s+/g, '_')}.xlights`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast.success("Download started", {
+      description: "Your sequence is being downloaded"
+    });
+  };
+  
+  if (isLoading || isCheckingPurchase) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -187,7 +268,9 @@ const SequenceDetail: React.FC = () => {
               <PurchaseCard 
                 price={sequence.price}
                 isPurchased={isPurchased}
+                isProcessing={isPurchaseProcessing}
                 onPurchase={handlePurchase}
+                onDownload={handleDownload}
               />
               
               <SellerCard seller={sequence.creator} />

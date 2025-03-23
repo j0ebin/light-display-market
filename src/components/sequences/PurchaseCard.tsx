@@ -1,23 +1,29 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatPrice } from '@/utils/formatters';
+import { formatPrice } from '@/lib/utils';
+import { Download } from 'lucide-react';
 
 interface PurchaseCardProps {
   price: number;
   isPurchased?: boolean;
+  isProcessing?: boolean;
   onPurchase: () => void;
+  onDownload?: () => void;
 }
 
 const PurchaseCard: React.FC<PurchaseCardProps> = ({ 
   price,
   isPurchased = false,
-  onPurchase
+  isProcessing = false,
+  onPurchase,
+  onDownload
 }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Purchase Sequence</CardTitle>
+        <CardTitle>Sequence Access</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
@@ -25,13 +31,24 @@ const PurchaseCard: React.FC<PurchaseCardProps> = ({
           <span className="text-2xl font-bold">{formatPrice(price)}</span>
         </div>
         
-        <Button 
-          className="w-full" 
-          onClick={onPurchase}
-          disabled={isPurchased}
-        >
-          {isPurchased ? 'Purchased' : 'Buy Now'}
-        </Button>
+        {isPurchased ? (
+          <Button 
+            className="w-full" 
+            onClick={onDownload}
+            variant="default"
+          >
+            <Download size={16} className="mr-2" />
+            Re-download
+          </Button>
+        ) : (
+          <Button 
+            className="w-full" 
+            onClick={onPurchase}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Processing...' : 'Buy Now'}
+          </Button>
+        )}
         
         <p className="text-sm text-muted-foreground">
           {isPurchased 

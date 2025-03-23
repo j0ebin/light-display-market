@@ -85,6 +85,8 @@ export type Database = {
           artist: string
           created_at: string
           display_year_id: string | null
+          duration: string | null
+          genre: string | null
           id: string
           reused_from: string | null
           sequence_available: boolean | null
@@ -98,6 +100,8 @@ export type Database = {
           artist: string
           created_at?: string
           display_year_id?: string | null
+          duration?: string | null
+          genre?: string | null
           id?: string
           reused_from?: string | null
           sequence_available?: boolean | null
@@ -111,6 +115,8 @@ export type Database = {
           artist?: string
           created_at?: string
           display_year_id?: string | null
+          duration?: string | null
+          genre?: string | null
           id?: string
           reused_from?: string | null
           sequence_available?: boolean | null

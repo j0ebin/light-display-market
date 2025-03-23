@@ -34,25 +34,27 @@ export const usePurchaseDetails = (id: string | undefined) => {
       
       setIsLoading(true);
       try {
-        // Use RPC call to get purchase details with the correct type annotation
-        const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('get_purchase_details', {
+        // Use RPC call to get purchase details with correct typing
+        const { data, error } = await supabase.rpc<PurchaseDetailsResponse>('get_purchase_details', {
           p_user_id: user.id,
           p_sequence_id: id
         });
           
         if (error) throw error;
         
-        if (data && data.length > 0) {
-          const purchaseData = data[0];
+        // Check if data exists and has items
+        const purchaseData = data as unknown as PurchaseDetailsResponse[];
+        if (purchaseData && purchaseData.length > 0) {
+          const purchaseItem = purchaseData[0];
           setPurchase({
-            id: purchaseData.id,
+            id: purchaseItem.id,
             sequence: {
-              id: purchaseData.sequence_id,
+              id: purchaseItem.sequence_id,
               title: "Holiday Light Sequence", // Replace with actual title from your DB
-              downloadUrl: `/api/sequences/download/${purchaseData.sequence_id}` // Replace with actual download URL
+              downloadUrl: `/api/sequences/download/${purchaseItem.sequence_id}` // Replace with actual download URL
             },
-            purchaseDate: new Date(purchaseData.created_at).toLocaleDateString(),
-            amountPaid: purchaseData.amount_paid
+            purchaseDate: new Date(purchaseItem.created_at).toLocaleDateString(),
+            amountPaid: purchaseItem.amount_paid
           });
         }
       } catch (error) {
@@ -72,7 +74,18 @@ export const usePurchaseDetails = (id: string | undefined) => {
     if (!purchase) return;
     
     try {
-      // In a real implementation, this would trigger the file download
+      // Create a mock file for demonstration
+      const element = document.createElement('a');
+      const file = new Blob(
+        [`This is a mock sequence file for ${purchase.sequence.id}`], 
+        {type: 'text/plain'}
+      );
+      element.href = URL.createObjectURL(file);
+      element.download = `sequence_${purchase.sequence.id}.xlights`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
       toast.success("Download started", {
         description: "Your sequence is being downloaded."
       });
