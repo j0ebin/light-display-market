@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Save } from 'lucide-react';
 
-interface Display {
+interface ViewDisplay {
   id: string;
   name: string;
   description: string;
@@ -20,10 +20,10 @@ interface Display {
 }
 
 interface DisplayEditFormProps {
-  display: Display;
-  onSave: (display: Partial<Display>) => void;
+  display: ViewDisplay;
+  onSave: (display: ViewDisplay) => void;
   onCancel: () => void;
-  onChange: (display: Display | null) => void;
+  onChange: (display: ViewDisplay | null) => void;
 }
 
 const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
@@ -37,7 +37,7 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
     onSave(display);
   };
 
-  const handleChange = (field: keyof Display, value: string) => {
+  const handleChange = (field: keyof ViewDisplay, value: string | number) => {
     onChange({
       ...display,
       [field]: value,
@@ -65,7 +65,6 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
               value={display.description}
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Enter display description"
-              className="min-h-[100px]"
             />
           </div>
 
@@ -76,16 +75,6 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
               value={display.location}
               onChange={(e) => handleChange('location', e.target.value)}
               placeholder="Enter display location"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="schedule">Schedule</Label>
-            <Input
-              id="schedule"
-              value={display.schedule}
-              onChange={(e) => handleChange('schedule', e.target.value)}
-              placeholder="Enter display schedule"
             />
           </div>
 
@@ -108,9 +97,29 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
               placeholder="Enter holiday type"
             />
           </div>
+
+          <div>
+            <Label htmlFor="schedule">Schedule</Label>
+            <Textarea
+              id="schedule"
+              value={display.schedule}
+              onChange={(e) => handleChange('schedule', e.target.value)}
+              placeholder="Enter display schedule (JSON format)"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="image_url">Image URL</Label>
+            <Input
+              id="image_url"
+              value={display.image_url}
+              onChange={(e) => handleChange('image_url', e.target.value)}
+              placeholder="Enter image URL"
+            />
+          </div>
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
