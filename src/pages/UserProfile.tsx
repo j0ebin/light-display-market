@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -121,7 +122,7 @@ const UserProfile = () => {
               </TabsList>
               
               <TabsContent value="display" className="mt-0">
-                <DisplayTab userDisplay={userDisplay} />
+                <DisplayTab />
               </TabsContent>
               
               <TabsContent value="songs" className="mt-0">

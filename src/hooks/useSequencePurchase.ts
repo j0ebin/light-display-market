@@ -6,6 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Sequence } from '@/types/sequence';
 
+// Define the type for purchase details response
+interface PurchaseDetailsResponse {
+  id: string;
+  sequence_id: string;
+  amount_paid: number;
+  created_at: string;
+}
+
 export const useSequencePurchase = (sequenceId: string | undefined) => {
   const [isPurchased, setIsPurchased] = useState(false);
   const [isPurchaseProcessing, setIsPurchaseProcessing] = useState(false);
@@ -22,7 +30,7 @@ export const useSequencePurchase = (sequenceId: string | undefined) => {
     
     try {
       setIsCheckingPurchase(true);
-      const { data, error } = await supabase.rpc('get_purchase_details', {
+      const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('get_purchase_details', {
         p_user_id: user.id,
         p_sequence_id: sequenceId
       });
@@ -54,11 +62,11 @@ export const useSequencePurchase = (sequenceId: string | undefined) => {
     
     try {
       // In a real implementation, this would call your payment API
-      const { data, error } = await supabase.rpc('create_purchase', {
+      const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('create_purchase', {
         p_user_id: user.id,
         p_sequence_id: sequenceId,
         p_amount_paid: sequence.price,
-        p_seller_id: sequence.seller.id,
+        p_seller_id: sequence.creator.id,
         p_status: 'completed'
       });
       

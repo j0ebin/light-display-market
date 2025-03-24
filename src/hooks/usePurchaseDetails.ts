@@ -35,7 +35,7 @@ export const usePurchaseDetails = (id: string | undefined) => {
       setIsLoading(true);
       try {
         // Use RPC call to get purchase details with correct typing
-        const { data, error } = await supabase.rpc('get_purchase_details', {
+        const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('get_purchase_details', {
           p_user_id: user.id,
           p_sequence_id: id
         });
@@ -43,9 +43,8 @@ export const usePurchaseDetails = (id: string | undefined) => {
         if (error) throw error;
         
         // Check if data exists and has items
-        const purchaseData = data as PurchaseDetailsResponse[];
-        if (purchaseData && purchaseData.length > 0) {
-          const purchaseItem = purchaseData[0];
+        if (data && Array.isArray(data) && data.length > 0) {
+          const purchaseItem = data[0];
           setPurchase({
             id: purchaseItem.id,
             sequence: {
