@@ -1,33 +1,40 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { AuthView } from './AuthPopover';
 
-// Form validation schema
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  email: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
+  password: z.string().min(6, {
+    message: 'Password must be at least 6 characters.',
+  }),
 });
-
-type FormValues = z.infer<typeof formSchema>;
 
 interface AuthSignInProps {
   onViewChange: (view: AuthView) => void;
   onSuccess: () => void;
 }
 
-const AuthSignIn: React.FC<AuthSignInProps> = ({ onViewChange, onSuccess }) => {
+const AuthSignIn = ({ onViewChange, onSuccess }: AuthSignInProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
   const { toast } = useToast();
-  
-  const form = useForm<FormValues>({
+
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
@@ -35,29 +42,16 @@ const AuthSignIn: React.FC<AuthSignInProps> = ({ onViewChange, onSuccess }) => {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setIsLoading(true);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Success!",
-        description: "You have been signed in.",
-      });
-      
+      setIsLoading(true);
+      await signIn(values.email, values.password);
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       toast({
-        title: "Sign in failed",
-        description: error.message || "Please check your credentials and try again.",
-        variant: "destructive",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Invalid email or password.',
       });
     } finally {
       setIsLoading(false);
@@ -65,10 +59,12 @@ const AuthSignIn: React.FC<AuthSignInProps> = ({ onViewChange, onSuccess }) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">Sign In</h3>
-        <p className="text-sm text-muted-foreground">Enter your email to sign in to your account</p>
+    <div className="px-8 pb-8">
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-semibold tracking-tight mb-2">Welcome back</h2>
+        <p className="text-sm text-muted-foreground">
+          Enter your email to sign in to your account
+        </p>
       </div>
       
       <Form {...form}>
@@ -78,50 +74,61 @@ const AuthSignIn: React.FC<AuthSignInProps> = ({ onViewChange, onSuccess }) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
+                  <Input
+                    placeholder="name@example.com"
+                    type="email"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    autoCorrect="off"
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input
+                    placeholder="Enter your password"
+                    type="password"
+                    autoCapitalize="none"
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 font-normal h-auto"
-            onClick={() => onViewChange('resetPassword')}
-          >
-            Forgot your password?
-          </Button>
-          
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign In'}
+          <Button className="w-full" type="submit" disabled={isLoading}>
+            {isLoading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
       </Form>
-      
+
       <div className="mt-4 text-center text-sm">
-        Don't have an account?{' '}
         <Button
-          type="button"
           variant="link"
-          className="h-auto p-0"
+          className="text-muted-foreground hover:text-primary px-2"
+          onClick={() => onViewChange('resetPassword')}
+        >
+          Forgot password?
+        </Button>
+      </div>
+
+      <div className="mt-6 text-center text-sm">
+        <span className="text-muted-foreground">Don't have an account?</span>{' '}
+        <Button
+          variant="link"
+          className="text-primary hover:text-primary/90 px-2"
           onClick={() => onViewChange('signUp')}
         >
           Sign up

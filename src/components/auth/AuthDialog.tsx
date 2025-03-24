@@ -1,14 +1,14 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { LogIn, User } from 'lucide-react';
+import { LogIn, User, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthSignIn from './AuthSignIn';
 import AuthSignUp from './AuthSignUp';
 import AuthResetPassword from './AuthResetPassword';
 import { AuthView } from './AuthPopover';
+import { cn } from '@/lib/utils';
 
 interface AuthDialogProps {
   triggerClassName?: string;
@@ -56,12 +56,27 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent 
+        className={cn(
+          "sm:max-w-md p-0 border-none bg-transparent shadow-none",
+          user ? "sm:max-w-xs" : "sm:max-w-md"
+        )}
+      >
         {user ? (
-          <div className="p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <User className="h-4 w-4" />
-              <span className="font-medium">{user.email}</span>
+          <div className="p-6 bg-card rounded-lg border shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4" />
+                <span className="font-medium">{user.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={handleClose}
+              >
+                <X size={16} />
+              </Button>
             </div>
             <div className="space-y-2">
               <Button 
@@ -81,7 +96,17 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
             </div>
           </div>
         ) : (
-          <>
+          <div className="bg-card rounded-lg border shadow-lg overflow-hidden">
+            <div className="flex justify-end p-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={handleClose}
+              >
+                <X size={16} />
+              </Button>
+            </div>
             {view === 'signIn' && (
               <AuthSignIn 
                 onViewChange={handleViewChange} 
@@ -108,7 +133,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
                 }}
               />
             )}
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>
