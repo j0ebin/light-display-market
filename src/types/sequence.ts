@@ -93,4 +93,5 @@ export interface Song {
   duration: string;
   year?: number;
   genre?: string;
+  albumCover?: string;
 }
