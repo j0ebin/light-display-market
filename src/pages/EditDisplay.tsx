@@ -257,7 +257,7 @@ const EditDisplay = () => {
   return (
     <div className="container max-w-4xl py-8">
       <h1 className="text-3xl font-bold mb-8">
-        {id ? 'Edit Display' : 'Create New Display'}
+        {id ? 'Edit Display' : 'Add Your Display'}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
