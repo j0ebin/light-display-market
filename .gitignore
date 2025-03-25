@@ -33,3 +33,4 @@ dist-ssr
 
 # Stripe binary files
 stripe_*.tar.gz
+.env

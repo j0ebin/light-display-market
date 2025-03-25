@@ -15,6 +15,7 @@ import NotFound from '@/pages/NotFound';
 import Favorites from '@/pages/Favorites';
 import Auth from '@/pages/Auth';
 import ForgotPassword from '@/pages/ForgotPassword';
+import CustomSignUp from '@/pages/CustomSignUp';
 import { initDummyData } from './utils/initDummyData';
 import { useEffect } from 'react';
 import RatingTest from './components/test/RatingTest';
@@ -31,6 +32,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/signup" element={<CustomSignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/displays" element={<Displays />} />
           <Route path="/display/:id" element={<DisplayDetail />} />

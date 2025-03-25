@@ -1,10 +1,22 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, Lightbulb, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CTASection = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleAddDisplay = () => {
+    if (user) {
+      navigate('/profile/displays/add');
+    } else {
+      navigate('/signup');
+    }
+  };
+
   return (
     <section className="relative py-20 px-6 overflow-hidden">
       {/* Background with gradient */}
@@ -37,6 +49,7 @@ const CTASection = () => {
               <Button 
                 size="lg" 
                 className="rounded-full px-8"
+                onClick={handleAddDisplay}
               >
                 Add Your Display
               </Button>
@@ -44,6 +57,7 @@ const CTASection = () => {
                 variant="outline" 
                 size="lg" 
                 className="rounded-full px-8"
+                onClick={() => navigate('/about')}
               >
                 Learn More
               </Button>
