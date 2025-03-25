@@ -26,3 +26,10 @@ dist-ssr
 
 # MCP configuration with sensitive credentials
 .cursor/
+
+# Environment variables
+.env
+.env.*
+
+# Stripe binary files
+stripe_*.tar.gz
