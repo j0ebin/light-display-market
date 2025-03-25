@@ -78,7 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, login, logout, getAccessToken }}>
-      <GoogleOAuthProvider clientId={process.env.VITE_GOOGLE_CLIENT_ID || ''}>
+      <GoogleOAuthProvider 
+        clientId={process.env.VITE_GOOGLE_CLIENT_ID || ''}
+        onScriptLoadSuccess={() => console.log('Google OAuth script loaded successfully')}
+        onScriptLoadError={() => console.error('Failed to load Google OAuth script')}
+      >
         {children}
       </GoogleOAuthProvider>
     </AuthContext.Provider>
