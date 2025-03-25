@@ -29,7 +29,8 @@ dist-ssr
 
 # Environment variables
 .env
-.env.*
+.env.local
+.env.*.local
 
 # Stripe binary files
 stripe_*.tar.gz

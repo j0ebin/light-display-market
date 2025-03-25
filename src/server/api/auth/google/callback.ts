@@ -12,6 +12,7 @@ export default async function handler(req: Request, res: Response) {
   }
 
   try {
+    // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -21,7 +22,7 @@ export default async function handler(req: Request, res: Response) {
         code,
         client_id: process.env.VITE_GOOGLE_CLIENT_ID!,
         client_secret: process.env.VITE_GOOGLE_CLIENT_SECRET!,
-        redirect_uri: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/auth/callback`,
+        redirect_uri: `${process.env.VITE_APP_URL}/auth/callback`,
         grant_type: 'authorization_code',
       }),
     });
@@ -32,7 +33,29 @@ export default async function handler(req: Request, res: Response) {
     }
 
     const tokens = await tokenResponse.json();
-    return res.status(200).json(tokens);
+
+    // Get user info using the access token
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+      },
+    });
+
+    if (!userInfoResponse.ok) {
+      throw new Error('Failed to fetch user info');
+    }
+
+    const userInfo = await userInfoResponse.json();
+
+    // Return both tokens and user info
+    return res.status(200).json({
+      ...tokens,
+      user: {
+        email: userInfo.email,
+        name: userInfo.name,
+        picture: userInfo.picture,
+      },
+    });
   } catch (error) {
     console.error('Token exchange error:', error);
     return res.status(500).json({ message: 'Failed to exchange authorization code' });

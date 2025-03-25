@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Lightbulb, Upload, Users, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { GoogleLogin } from '@/components/auth/GoogleLogin';
 
 const CustomSignUp = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -21,7 +22,11 @@ const CustomSignUp = () => {
     setIsLoading(true);
     
     try {
-      await signUp(formData);
+      await login({
+        email: formData.email,
+        password: formData.password,
+        name: formData.firstName || formData.email.split('@')[0],
+      });
       toast.success('Account created successfully! Please check your email to verify your account.');
       navigate('/profile/displays/add');
     } catch (error) {
@@ -33,8 +38,11 @@ const CustomSignUp = () => {
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'facebook') => {
-    // TODO: Implement OAuth sign-in
-    console.log('OAuth sign in with:', provider);
+    if (provider === 'facebook') {
+      // TODO: Implement Facebook sign-in
+      console.log('Facebook sign in not yet implemented');
+      return;
+    }
   };
 
   return (
@@ -111,13 +119,9 @@ const CustomSignUp = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOAuthSignIn('google')}
-              >
-                Google
-              </Button>
+              <div className="col-span-1">
+                <GoogleLogin />
+              </div>
               <Button
                 type="button"
                 variant="outline"

@@ -8,10 +8,27 @@ interface AuthUser {
   access_token?: string;
 }
 
+interface LoginCredentials {
+  email: string;
+  password?: string;
+  name?: string;
+  code?: string;
+  picture?: string;
+}
+
+interface GoogleAuthResponse {
+  access_token: string;
+  user: {
+    email: string;
+    name: string;
+    picture?: string;
+  };
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (response: any) => void;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   getAccessToken: () => Promise<string | null>;
 }
@@ -31,36 +48,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (response: any) => {
-    const userData: AuthUser = {
-      email: response.email,
-      name: response.name,
-      picture: response.picture,
-    };
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      let userData: AuthUser;
 
-    // If we have a code from server-side flow, exchange it for tokens
-    if (response.code) {
-      try {
+      if (credentials.code) {
+        // OAuth flow
         const tokenResponse = await fetch('/api/auth/google/callback', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ code: response.code }),
+          body: JSON.stringify({ code: credentials.code }),
         });
         
-        if (tokenResponse.ok) {
-          const tokens = await tokenResponse.json();
-          userData.access_token = tokens.access_token;
+        if (!tokenResponse.ok) {
+          throw new Error('Failed to exchange authorization code');
         }
-      } catch (error) {
-        console.error('Error exchanging code for tokens:', error);
-      }
-    }
 
-    setUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
+        const data: GoogleAuthResponse = await tokenResponse.json();
+        userData = {
+          email: data.user.email,
+          name: data.user.name,
+          picture: data.user.picture,
+          access_token: data.access_token,
+        };
+      } else if (credentials.password) {
+        // Password-based authentication
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Invalid credentials');
+        }
+
+        const data = await response.json();
+        userData = {
+          email: credentials.email,
+          name: data.name || credentials.email.split('@')[0],
+          access_token: data.access_token,
+        };
+      } else {
+        // Direct login (e.g., from Google client-side flow)
+        userData = {
+          email: credentials.email,
+          name: credentials.name || credentials.email.split('@')[0],
+          picture: credentials.picture,
+        };
+      }
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
   const logout = () => {
