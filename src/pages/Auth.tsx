@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, mode: 'signin' | 'signup') => {
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     setIsLoading(true);
@@ -23,12 +23,28 @@ export default function Auth() {
     const password = formData.get('password') as string;
 
     try {
-      if (mode === 'signin') {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
-      navigate('/');
+      await signIn(email, password);
+      navigate('/profile');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const firstName = formData.get('firstName') as string;
+
+    try {
+      await signUp({ email, password, firstName });
+      navigate('/profile');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -49,7 +65,7 @@ export default function Auth() {
           
           <CardContent>
             <TabsContent value="signin">
-              <form onSubmit={(e) => handleSubmit(e, 'signin')}>
+              <form onSubmit={handleSignIn}>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -71,6 +87,19 @@ export default function Auth() {
                       required
                     />
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="remember"
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor="remember" className="text-sm">Remember me</Label>
+                    </div>
+                    <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                      Forgot your password?
+                    </Link>
+                  </div>
                   {error && <p className="text-sm text-red-500">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Signing in...' : 'Sign In'}
@@ -80,7 +109,7 @@ export default function Auth() {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={(e) => handleSubmit(e, 'signup')}>
+              <form onSubmit={handleSignUp}>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -89,6 +118,16 @@ export default function Auth() {
                       name="email"
                       type="email"
                       placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      placeholder="Enter your first name"
                       required
                     />
                   </div>
