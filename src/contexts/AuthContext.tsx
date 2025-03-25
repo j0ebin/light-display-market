@@ -1,109 +1,94 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
-interface SignUpParams {
+interface AuthUser {
   email: string;
-  password: string;
-  firstName: string;
+  name: string;
+  picture?: string;
+  access_token?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (params: SignUpParams) => Promise<void>;
-  signOut: () => Promise<void>;
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  login: (response: any) => void;
+  logout: () => void;
+  getAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user || null);
-      } catch (error) {
-        console.error('Error loading auth session:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log('Auth state change:', event);
-      setSession(newSession);
-      setUser(newSession?.user || null);
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Check for existing session
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const login = async (response: any) => {
+    const userData: AuthUser = {
+      email: response.email,
+      name: response.name,
+      picture: response.picture,
+    };
 
-    if (error) {
-      throw error;
+    // If we have a code from server-side flow, exchange it for tokens
+    if (response.code) {
+      try {
+        const tokenResponse = await fetch('/api/auth/google/callback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: response.code }),
+        });
+        
+        if (tokenResponse.ok) {
+          const tokens = await tokenResponse.json();
+          userData.access_token = tokens.access_token;
+        }
+      } catch (error) {
+        console.error('Error exchanging code for tokens:', error);
+      }
     }
+
+    setUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const signUp = async ({ email, password, firstName }: SignUpParams) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName
-        },
-        emailRedirectTo: window.location.origin,
-      },
-    });
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+  };
 
-    if (error) {
-      throw error;
+  const getAccessToken = async () => {
+    if (!user?.access_token) {
+      return null;
     }
+    return user.access_token;
   };
 
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, getAccessToken }}>
+      <GoogleOAuthProvider clientId={process.env.VITE_GOOGLE_CLIENT_ID || ''}>
+        {children}
+      </GoogleOAuthProvider>
+    </AuthContext.Provider>
+  );
+}
 
-  const value = {
-    user,
-    session,
-    isLoading,
-    signIn,
-    signUp,
-    signOut,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
