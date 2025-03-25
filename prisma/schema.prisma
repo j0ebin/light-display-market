@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  pending
+  paid
+  failed
+}
+
+enum AccountStatus {
+  pending
+  active
+}
+
+enum PayoutStatus {
+  pending
+  paid
+  failed
+}
+
+model User {
+  id                          String             @id
+  stripeAccountId            String?            @unique @map("stripe_account_id")
+  stripeAccountStatus        AccountStatus      @default(pending) @map("stripe_account_status")
+  stripeAccountDetailsSubmitted Boolean         @default(false) @map("stripe_account_details_submitted")
+  createdAt                  DateTime           @default(now()) @map("created_at")
+  updatedAt                  DateTime           @default(now()) @map("updated_at")
+  orders                     Order[]
+  payouts                    Payout[]
+  sequences                  Sequence[]         @relation("userSequences")
+  purchases                  SequencePurchase[] @relation("userPurchases")
+
+  @@map("users")
+}
+
+model Sequence {
+  id        String             @id
+  ownerId   String            @map("owner_id")
+  name      String
+  price     Int
+  currency  String            @default("USD")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @default(now()) @map("updated_at")
+  owner     User              @relation("userSequences", fields: [ownerId], references: [id])
+  purchases SequencePurchase[]
+
+  @@map("sequences")
+}
+
+model SequencePurchase {
+  id           String   @id
+  userId       String   @map("user_id")
+  sequenceId   String   @map("sequence_id")
+  orderId      String?  @map("order_id")
+  downloadCount Int     @default(0) @map("download_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+  user         User     @relation("userPurchases", fields: [userId], references: [id])
+  sequence     Sequence @relation(fields: [sequenceId], references: [id])
+  order        Order?   @relation(fields: [orderId], references: [id])
+
+  @@map("sequence_purchases")
+}
+
+model Order {
+  id              String            @id
+  userId          String           @map("user_id")
+  paymentIntentId String?          @unique @map("payment_intent_id")
+  amount          Int
+  currency        String
+  status          OrderStatus      @default(pending)
+  paidAt          DateTime?        @map("paid_at")
+  lastError       String?          @map("last_error")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @default(now()) @map("updated_at")
+  user            User             @relation(fields: [userId], references: [id])
+  purchases       SequencePurchase[]
+
+  @@map("orders")
+}
+
+model Payout {
+  id             String       @id
+  userId         String      @map("user_id")
+  amount         Int
+  currency       String
+  status         PayoutStatus
+  failureMessage String?     @map("failure_message")
+  failureCode    String?     @map("failure_code")
+  createdAt      DateTime    @map("created_at")
+  arrivalDate    DateTime?   @map("arrival_date")
+  paidAt         DateTime?   @map("paid_at")
+  updatedAt      DateTime    @default(now()) @map("updated_at")
+  user           User        @relation(fields: [userId], references: [id])
+
+  @@map("payouts")
+}
