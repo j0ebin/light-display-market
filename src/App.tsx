@@ -16,6 +16,8 @@ import Favorites from '@/pages/Favorites';
 import Auth from '@/pages/Auth';
 import ForgotPassword from '@/pages/ForgotPassword';
 import CustomSignUp from '@/pages/CustomSignUp';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
 import { initDummyData } from './utils/initDummyData';
 import { useEffect } from 'react';
 import RatingTest from './components/test/RatingTest';
@@ -44,6 +46,8 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/test/rating" element={<RatingTest />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
