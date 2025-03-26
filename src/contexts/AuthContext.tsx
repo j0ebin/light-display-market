@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { supabase } from '@/lib/supabase';
 
 interface AuthUser {
   email: string;
@@ -10,28 +10,20 @@ interface AuthUser {
 
 interface LoginCredentials {
   email: string;
-  password?: string;
-  name?: string;
-  code?: string;
-  picture?: string;
-}
-
-interface GoogleAuthResponse {
-  access_token: string;
-  user: {
-    email: string;
-    name: string;
-    picture?: string;
-  };
+  password: string;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ data: any; error: any | null }>;
+  signInWithGoogle: () => Promise<void>;
   logout: () => void;
   getAccessToken: () => Promise<string | null>;
 }
+
+const DEFAULT_AVATAR_URL = 'https://vhaizqhkodqyqplpqcss.supabase.co/storage/v1/object/public/avatars/default-avatar.png';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -40,102 +32,125 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    // Check for existing Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const userData: AuthUser = {
+          email: session.user.email || '',
+          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || '',
+          picture: session.user.user_metadata.avatar_url || DEFAULT_AVATAR_URL,
+          access_token: session.access_token,
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    });
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        const userData: AuthUser = {
+          email: session.user.email || '',
+          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || '',
+          picture: session.user.user_metadata.avatar_url || DEFAULT_AVATAR_URL,
+          access_token: session.access_token,
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      let userData: AuthUser;
+      let { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-      if (credentials.code) {
-        // OAuth flow
-        const tokenResponse = await fetch('/api/auth/google/callback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ code: credentials.code }),
-        });
-        
-        if (!tokenResponse.ok) {
-          throw new Error('Failed to exchange authorization code');
-        }
+      if (error) throw error;
 
-        const data: GoogleAuthResponse = await tokenResponse.json();
-        userData = {
-          email: data.user.email,
-          name: data.user.name,
-          picture: data.user.picture,
-          access_token: data.access_token,
+      if (data.user) {
+        const userData: AuthUser = {
+          email: data.user.email || '',
+          name: data.user.user_metadata.name || data.user.email?.split('@')[0] || '',
+          picture: data.user.user_metadata.avatar_url || DEFAULT_AVATAR_URL,
+          access_token: data.session?.access_token,
         };
-      } else if (credentials.password) {
-        // Password-based authentication
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Invalid credentials');
-        }
-
-        const data = await response.json();
-        userData = {
-          email: credentials.email,
-          name: data.name || credentials.email.split('@')[0],
-          access_token: data.access_token,
-        };
-      } else {
-        // Direct login (e.g., from Google client-side flow)
-        userData = {
-          email: credentials.email,
-          name: credentials.name || credentials.email.split('@')[0],
-          picture: credentials.picture,
-        };
+        setUser(userData);
+        setIsAuthenticated(true);
       }
-
-      setUser(userData);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('user');
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            avatar_url: DEFAULT_AVATAR_URL,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return { data: null, error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
 
   const getAccessToken = async () => {
-    if (!user?.access_token) {
-      return null;
-    }
-    return user.access_token;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, getAccessToken }}>
-      <GoogleOAuthProvider 
-        clientId={process.env.VITE_GOOGLE_CLIENT_ID || ''}
-        onScriptLoadSuccess={() => console.log('Google OAuth script loaded successfully')}
-        onScriptLoadError={() => console.error('Failed to load Google OAuth script')}
-      >
-        {children}
-      </GoogleOAuthProvider>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, signInWithGoogle, logout, getAccessToken }}>
+      {children}
     </AuthContext.Provider>
   );
 }

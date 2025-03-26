@@ -50,17 +50,20 @@ const AuthSignUp = ({ onViewChange, onSuccess }: AuthSignUpProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      await signUp(values.email, values.password);
+      const { data, error } = await signUp(values.email, values.password);
+      
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Please check your email to confirm your account.',
       });
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        description: error.message || 'Something went wrong. Please try again.',
       });
     } finally {
       setIsLoading(false);
