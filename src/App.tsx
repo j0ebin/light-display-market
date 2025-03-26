@@ -20,14 +20,61 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import { AuthCallback } from '@/components/auth/AuthCallback';
 import { initDummyData } from './utils/initDummyData';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import RatingTest from './components/test/RatingTest';
 
 function App() {
-  // Initialize dummy data once when the app loads
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<Error | null>(null);
+
+  // Initialize app and check Supabase connection
   useEffect(() => {
-    initDummyData();
+    const initializeApp = async () => {
+      try {
+        console.log('Initializing app...');
+        
+        // Test Supabase connection
+        const { data, error } = await supabase.from('displays').select('count').single();
+        if (error) {
+          throw new Error(`Supabase connection error: ${error.message}`);
+        }
+        console.log('Supabase connection successful');
+
+        // Initialize dummy data
+        await initDummyData();
+        console.log('App initialization complete');
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('App initialization failed:', error);
+        setInitError(error instanceof Error ? error : new Error('Unknown initialization error'));
+        toast.error('Failed to initialize application', {
+          description: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+      }
+    };
+
+    initializeApp();
   }, []);
+
+  if (initError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full space-y-4 text-center">
+          <h1 className="text-2xl font-bold text-red-600">Initialization Error</h1>
+          <p className="text-muted-foreground">{initError.message}</p>
+          <button
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthProvider>
