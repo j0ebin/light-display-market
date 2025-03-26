@@ -3,39 +3,24 @@ import { Charity } from './charity';
 export interface Sequence {
   id: string;
   title: string;
-  description?: string;
-  software: string;
-  rating: number;
-  review_rating: number;
-  downloads: number;
+  displayName: string;
+  imageUrl: string;
   price: number;
-  channelCount?: number;
-  createdAt: string;
-  videoUrl?: string;
-  imageUrl?: string;
+  rating: number;
+  downloads: number;
+  software: string;
   song: {
     title: string;
     artist: string;
     genre?: string;
-    yearIntroduced?: number;
   };
-  display: {
-    title: string;
-    location: string;
-    schedule: string;
-    rating: number;
-  };
-  displayName: string;
-  displayId?: number;
-  creator: {
-    id: string;
-    name: string;
-    avatar?: string;
-    rating: number;
-    sequencesCount: number;
-    joinedDate: string;
-  };
-  charity?: Charity;
+  creatorName: string;
+  creatorAvatar: string;
+  displayId?: string | number;
+  review_rating?: number;
+  createdAt?: string;
+  display?: any;
+  creator?: any;
 }
 
 export interface SequenceDetail extends Sequence {

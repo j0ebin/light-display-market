@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
@@ -50,8 +49,14 @@ const Sequences = () => {
         let query = supabase
           .from('display_songs')
           .select(`
-            id, title, artist, sequence_price, sequence_file_url, 
-            display_year:display_years(display:displays(id, name))
+            *,
+            display_year:display_years(
+              id,
+              display:displays(
+                id,
+                name
+              )
+            )
           `)
           .eq('sequence_available', true);
         
@@ -69,22 +74,33 @@ const Sequences = () => {
         
         // Transform to Sequence type
         return (data || []).map(song => ({
-          id: generateSequenceId(song.title, song.artist),
+          id: song.id,
           title: song.title,
           displayName: song.display_year?.display?.name || 'Unknown Display',
           imageUrl: 'https://images.unsplash.com/photo-1482350325005-eda5e677279b?q=80&w=1080',
-          price: song.sequence_price || 0,
-          rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
-          downloads: Math.floor(Math.random() * 300) + 50, // Random download count
-          software: Math.random() > 0.3 ? 'xLights' : 'LOR', // 70% xLights, 30% LOR
+          price: Number(song.sequence_price) || 0,
+          rating: 4.5 + Math.random() * 0.5,
+          review_rating: 4.5 + Math.random() * 0.5,
+          downloads: Math.floor(Math.random() * 300) + 50,
+          software: Math.random() > 0.3 ? 'xLights' : 'LOR',
           song: {
             title: song.title,
             artist: song.artist,
-            genre: Math.random() > 0.5 ? 'Christmas' : 'Holiday'
+            genre: song.genre || 'Holiday'
           },
           creatorName: 'Holiday Lights Pro',
           creatorAvatar: 'https://i.pravatar.cc/150?img=1',
-          displayId: song.display_year?.display?.id
+          displayId: song.display_year?.display?.id?.toString(),
+          createdAt: song.created_at,
+          display: song.display_year?.display,
+          creator: {
+            id: '1',
+            name: 'Holiday Lights Pro',
+            avatar: 'https://i.pravatar.cc/150?img=1',
+            rating: 4.8,
+            sequencesCount: 50,
+            joinedDate: '2023-01-01'
+          }
         }));
       } catch (error) {
         console.error('Error in fetch:', error);
