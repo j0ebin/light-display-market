@@ -53,7 +53,7 @@ const AuthPopover = () => {
         <DropdownMenuContent align="end" className="w-[200px]">
           <div className="flex items-center space-x-2 p-2 mb-2 border-b">
             <User className="h-4 w-4" />
-            <span className="font-medium text-sm truncate">{user.email}</span>
+            <span className="font-medium text-sm truncate">{user.user_metadata?.full_name || user.email}</span>
           </div>
           <DropdownMenuItem onClick={handleProfileClick}>
             My Profile

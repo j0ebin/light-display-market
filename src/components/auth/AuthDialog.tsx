@@ -67,7 +67,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
-                <span className="font-medium">{user.email}</span>
+                <span className="font-medium">{user.user_metadata?.full_name || user.email}</span>
               </div>
               <Button
                 variant="ghost"

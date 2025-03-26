@@ -6,6 +6,10 @@ interface AuthUser {
   name: string;
   picture?: string;
   access_token?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 interface LoginCredentials {
