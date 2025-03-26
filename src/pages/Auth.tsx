@@ -96,7 +96,7 @@ export default function Auth() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => toast.error('Facebook sign in not yet implemented')}
+                onClick={() => toast.error('Facebook signup coming soon')}
               >
                 Facebook
               </Button>

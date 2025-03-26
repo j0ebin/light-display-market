@@ -40,7 +40,7 @@ const CustomSignUp = () => {
   const handleOAuthSignIn = async (provider: 'google' | 'facebook') => {
     if (provider === 'facebook') {
       // TODO: Implement Facebook sign-in
-      console.log('Facebook sign in not yet implemented');
+      console.log('Facebook signup coming soon');
       return;
     }
   };
