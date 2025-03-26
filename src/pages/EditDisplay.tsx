@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { MapboxAddressInput } from '@/components/MapboxAddressInput';
 import {
   Select,
   SelectContent,
@@ -354,19 +355,9 @@ const EditDisplay = () => {
 
             <div>
               <Label htmlFor="location">Address</Label>
-              <Input
-                id="location"
-                name="location"
-                autoComplete="street-address"
+              <MapboxAddressInput
                 value={form.location}
-                onChange={e => {
-                  const value = e.target.value;
-                  // Basic validation - ensure it's not just numbers
-                  if (!/^\d+$/.test(value)) {
-                    setForm(prev => ({ ...prev, location: value }));
-                  }
-                }}
-                placeholder="Start typing your address..."
+                onChange={(value) => setForm(prev => ({ ...prev, location: value }))}
                 required
                 className="mt-1"
               />
