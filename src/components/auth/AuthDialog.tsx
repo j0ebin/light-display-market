@@ -18,7 +18,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<AuthView>('signIn');
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleClose = () => {
     setOpen(false);
@@ -31,7 +31,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     handleClose();
     navigate('/');
   };
@@ -58,8 +58,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ triggerClassName }) => {
       </DialogTrigger>
       <DialogContent 
         className={cn(
-          "sm:max-w-md p-0 border-none bg-transparent shadow-none",
-          user ? "sm:max-w-xs" : "sm:max-w-md"
+          "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] p-0",
+          user ? "w-full max-w-xs" : "w-full max-w-md"
         )}
       >
         {user ? (

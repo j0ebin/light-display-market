@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LogIn, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +14,7 @@ const AuthPopover = () => {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<AuthView>('signIn');
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleClose = () => {
     setOpen(false);
@@ -28,7 +27,7 @@ const AuthPopover = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     handleClose();
     navigate('/');
   };
@@ -39,8 +38,8 @@ const AuthPopover = () => {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         {user ? (
           <Button variant="outline" className="rounded-full px-5">
             <User size={18} className="mr-2" />
@@ -52,8 +51,8 @@ const AuthPopover = () => {
             Sign In
           </Button>
         )}
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
         {user ? (
           <div className="p-4">
             <div className="flex items-center space-x-2 mb-4">
@@ -107,8 +106,8 @@ const AuthPopover = () => {
             )}
           </>
         )}
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 };
 
