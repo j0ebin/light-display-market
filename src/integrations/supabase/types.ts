@@ -268,6 +268,79 @@ export type Database = {
         }
         Relationships: []
       }
+      display_ratings: {
+        Row: {
+          id: string
+          display_id: string
+          user_id: string
+          rating: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          display_id: string
+          user_id: string
+          rating: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          display_id?: string
+          user_id?: string
+          rating?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "display_ratings_display_id_fkey"
+            columns: ["display_id"]
+            isOneToOne: false
+            referencedRelation: "displays"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sequence_reviews: {
+        Row: {
+          id: string
+          sequence_id: string
+          user_id: string
+          rating: number
+          comment: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          sequence_id: string
+          user_id: string
+          rating: number
+          comment?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          sequence_id?: string
+          user_id?: string
+          rating?: number
+          comment?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_reviews_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "display_songs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
