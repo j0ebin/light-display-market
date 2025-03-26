@@ -86,7 +86,7 @@ const AuthSignIn = ({ onViewChange, onSuccess }: AuthSignInProps) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="col-span-1">
           <GoogleLogin />
         </div>
@@ -95,12 +95,12 @@ const AuthSignIn = ({ onViewChange, onSuccess }: AuthSignInProps) => {
         </div>
       </div>
 
-      <div className="relative mb-6">
+      <div className="relative mb-8">
         <div className="absolute inset-0 flex items-center">
           <Separator />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-4 text-muted-foreground">Or continue with</span>
         </div>
       </div>
       
