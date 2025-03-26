@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, X, Upload } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 
 interface DisplaySong {
   id?: string;
@@ -23,6 +24,7 @@ interface DisplaySong {
   artist: string;
   year_introduced: number;
   youtube_url?: string;
+  display_id?: string;
 }
 
 interface DisplayForm {
@@ -34,6 +36,45 @@ interface DisplayForm {
   schedule: string;
   images: string[];
   songs: DisplaySong[];
+}
+
+interface DisplayData {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  location: string;
+  display_type: string;
+  holiday_type: string;
+  schedule: string | null;
+  image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+  updated_at: string;
+  display_songs?: DisplaySong[];
+}
+
+interface SupabaseDisplay {
+  id: number;
+  name: string;
+  description: string | null;
+  location: string;
+  display_type: string;
+  holiday_type: string;
+  schedule: string | null;
+  image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+  updated_at: string;
+  display_songs?: Array<{
+    id: string;
+    title: string;
+    artist: string;
+    year_introduced: number;
+    youtube_url?: string;
+  }>;
 }
 
 const MAX_IMAGES = 5;
@@ -71,7 +112,7 @@ const EditDisplay = () => {
 
   const loadDisplay = async (displayId: string) => {
     try {
-      const { data: display, error } = await supabase
+      const { data: rawDisplay, error } = await supabase
         .from('displays')
         .select(`
           *,
@@ -83,21 +124,26 @@ const EditDisplay = () => {
             youtube_url
           )
         `)
-        .eq('id', displayId)
+        .eq('id', parseInt(displayId, 10))
         .single();
 
       if (error) throw error;
 
-      if (display) {
+      if (rawDisplay) {
+        const display = rawDisplay as unknown as SupabaseDisplay;
+        const displaySongs = Array.isArray(display.display_songs) 
+          ? display.display_songs 
+          : [{ ...INITIAL_SONG }];
+
         setForm({
-          name: display.name,
+          name: display.name || '',
           description: display.description || '',
           location: display.location || '',
           display_type: display.display_type || 'Residential',
           holiday_type: display.holiday_type || 'Christmas',
           schedule: display.schedule || '',
-          images: display.images || [],
-          songs: display.display_songs || [{ ...INITIAL_SONG }]
+          images: display.image_url ? [display.image_url] : [],
+          songs: displaySongs
         });
       }
     } catch (error) {
@@ -193,13 +239,32 @@ const EditDisplay = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user?.email) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save a display.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
+      // Get the current user's ID from Supabase
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      if (!supabaseUser?.id) {
+        throw new Error('Could not get user ID');
+      }
+
       const displayData = {
-        user_id: user.id,
-        ...form,
+        user_id: supabaseUser.id,
+        name: form.name,
+        description: form.description,
+        location: form.location,
+        display_type: form.display_type,
+        holiday_type: form.holiday_type,
+        schedule: form.schedule,
+        image_url: form.images[0] || null,
         updated_at: new Date().toISOString()
       };
 
@@ -213,28 +278,30 @@ const EditDisplay = () => {
           .single();
 
         if (createError) throw createError;
-        displayId = newDisplay.id;
+        displayId = newDisplay?.id?.toString();
       } else {
         // Update existing display
         const { error: updateError } = await supabase
           .from('displays')
           .update(displayData)
-          .eq('id', id);
+          .eq('id', parseInt(id, 10));
 
         if (updateError) throw updateError;
       }
 
       // Handle songs
-      const { error: songsError } = await supabase
-        .from('display_songs')
-        .upsert(
-          form.songs.map(song => ({
-            ...song,
-            display_id: displayId
-          }))
-        );
+      if (displayId) {
+        const { error: songsError } = await supabase
+          .from('display_songs')
+          .upsert(
+            form.songs.map(song => ({
+              ...song,
+              display_id: parseInt(displayId, 10)
+            }))
+          );
 
-      if (songsError) throw songsError;
+        if (songsError) throw songsError;
+      }
 
       toast({
         title: "Success",
@@ -286,13 +353,26 @@ const EditDisplay = () => {
             </div>
 
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Address</Label>
               <Input
                 id="location"
+                name="location"
+                autoComplete="street-address"
                 value={form.location}
-                onChange={e => setForm(prev => ({ ...prev, location: e.target.value }))}
+                onChange={e => {
+                  const value = e.target.value;
+                  // Basic validation - ensure it's not just numbers
+                  if (!/^\d+$/.test(value)) {
+                    setForm(prev => ({ ...prev, location: value }));
+                  }
+                }}
+                placeholder="Start typing your address..."
                 required
+                className="mt-1"
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Enter your display's street address to help visitors find you
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
