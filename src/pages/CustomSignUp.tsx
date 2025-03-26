@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Sparkles, Lightbulb, Upload, Users, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { GoogleLogin } from '@/components/auth/GoogleLogin';
+import { FacebookLogin } from '@/components/auth/FacebookLogin';
 
 const CustomSignUp = () => {
   const navigate = useNavigate();
@@ -122,13 +123,9 @@ const CustomSignUp = () => {
               <div className="col-span-1">
                 <GoogleLogin />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOAuthSignIn('facebook')}
-              >
-                Facebook
-              </Button>
+              <div className="col-span-1">
+                <FacebookLogin />
+              </div>
             </div>
           </form>
         </div>

@@ -6,6 +6,7 @@ import { Sparkles, Lightbulb, Upload, Users, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GoogleLogin } from '@/components/auth/GoogleLogin';
+import { FacebookLogin } from '@/components/auth/FacebookLogin';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -93,13 +94,9 @@ export default function Auth() {
               <div className="col-span-1">
                 <GoogleLogin />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => toast.error('Facebook signup coming soon')}
-              >
-                Facebook
-              </Button>
+              <div className="col-span-1">
+                <FacebookLogin />
+              </div>
             </div>
           </form>
         </div>

@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ data: any; error: any | null }>;
   signInWithGoogle: () => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
   logout: () => void;
   getAccessToken: () => Promise<string | null>;
 }
@@ -130,6 +131,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${import.meta.env.VITE_APP_URL}/auth/callback`,
+          scopes: 'email',
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Facebook sign in error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -149,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, signInWithGoogle, logout, getAccessToken }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, signInWithGoogle, signInWithFacebook, logout, getAccessToken }}>
       {children}
     </AuthContext.Provider>
   );
