@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import RatingComponent from '../rating/RatingComponent';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { ReviewFormProps } from './types';
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({

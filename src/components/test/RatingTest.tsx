@@ -3,7 +3,7 @@ import RatingComponent from '@/components/shared/rating/RatingComponent';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { testRatingFunctionality, cleanupTestData } from '@/utils/testRating';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const RatingTest: React.FC = () => {
   const [displayRating, setDisplayRating] = useState(3.5);

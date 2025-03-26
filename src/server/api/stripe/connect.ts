@@ -2,8 +2,8 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.VITE_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!
 );
 
 export async function createConnectAccount(userId: string) {
@@ -19,8 +19,8 @@ export async function createConnectAccount(userId: string) {
     // Create an account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.VITE_APP_URL}/account/connect/refresh`,
-      return_url: `${process.env.VITE_APP_URL}/account/connect/complete`,
+      refresh_url: `${process.env.APP_URL}/account/connect/refresh`,
+      return_url: `${process.env.APP_URL}/account/connect/complete`,
       type: 'account_onboarding',
     });
 

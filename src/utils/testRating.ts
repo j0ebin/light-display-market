@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export const testRatingFunctionality = async (displayId: string, userId: string) => {
   console.log('Starting rating functionality test...');
