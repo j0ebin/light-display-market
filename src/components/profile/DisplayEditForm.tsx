@@ -5,6 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Save } from 'lucide-react';
+import { AddressAutofill } from '@mapbox/search-js-react';
+
+interface MapboxFeature {
+  geometry: {
+    coordinates: [number, number];
+    type: string;
+  };
+  properties: {
+    full_address?: string;
+    feature_name?: string;
+    place_name?: string;
+  };
+}
 
 interface ViewDisplay {
   id: string;
@@ -12,6 +25,8 @@ interface ViewDisplay {
   description: string;
   image_url: string;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   schedule: string;
   display_type: string;
   holiday_type: string;
@@ -26,15 +41,24 @@ interface DisplayEditFormProps {
   onChange: (display: ViewDisplay | null) => void;
 }
 
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiZnJpZmViIiwiYSI6ImNqOW1ndDJ3eDBzanMzM3F6ZTZiYWk3aTUifQ.OQ3YHA1tVZIREuS37uOn4g';
+
 const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
   display,
   onSave,
   onCancel,
   onChange,
 }) => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const addressRef = React.useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     onSave(display);
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange('location', e.target.value);
   };
 
   const handleChange = (field: keyof ViewDisplay, value: string | number) => {
@@ -44,9 +68,36 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
     });
   };
 
+  React.useEffect(() => {
+    const input = addressRef.current;
+    if (input) {
+      const handleRetrieve = (e: Event) => {
+        const customEvent = e as CustomEvent;
+        const feature = customEvent.detail?.features?.[0] as MapboxFeature | undefined;
+        if (feature) {
+          const [lng, lat] = feature.geometry.coordinates;
+          onChange({
+            ...display,
+            latitude: lat,
+            longitude: lng,
+            location: feature.properties.full_address || 
+                     feature.properties.place_name || 
+                     feature.properties.feature_name || 
+                     display.location
+          });
+        }
+      };
+
+      input.addEventListener('retrieve', handleRetrieve);
+      return () => {
+        input.removeEventListener('retrieve', handleRetrieve);
+      };
+    }
+  }, [display, onChange]);
+
   return (
     <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
             <Label htmlFor="name">Display Name</Label>
@@ -69,13 +120,22 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={display.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Enter display location"
-            />
+            <Label htmlFor="location">Address</Label>
+            <AddressAutofill accessToken={MAPBOX_ACCESS_TOKEN}>
+              <Input
+                ref={addressRef}
+                id="location"
+                name="location"
+                autoComplete="street-address"
+                value={display.location}
+                onChange={handleAddressChange}
+                placeholder="Start typing your address..."
+                className="w-full"
+              />
+            </AddressAutofill>
+            <p className="text-sm text-muted-foreground mt-1">
+              Start typing to see address suggestions
+            </p>
           </div>
 
           <div>
