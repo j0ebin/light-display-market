@@ -11,7 +11,7 @@ const CTASection = () => {
 
   const handleAddDisplay = () => {
     if (user) {
-      navigate('/profile/displays/add');
+      navigate('/display/edit');
     } else {
       navigate('/signup');
     }
