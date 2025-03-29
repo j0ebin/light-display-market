@@ -111,6 +111,10 @@ const EditDisplay = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const loadDisplay = async (displayId: string) => {
     try {
       const { data: rawDisplay, error } = await supabase
