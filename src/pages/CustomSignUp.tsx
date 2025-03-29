@@ -10,7 +10,7 @@ import { FacebookLogin } from '@/components/auth/FacebookLogin';
 
 const CustomSignUp = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signUp, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -23,15 +23,22 @@ const CustomSignUp = () => {
     setIsLoading(true);
     
     try {
+      // First create the account
+      const { data, error } = await signUp(formData.email, formData.password);
+      
+      if (error) throw error;
+
+      // If signup successful, attempt to log in
       await login({
         email: formData.email,
         password: formData.password,
         name: formData.firstName || formData.email.split('@')[0],
       });
+
       toast.success('Account created successfully! Please check your email to verify your account.');
       navigate('/profile/displays/add');
-    } catch (error) {
-      toast.error('Failed to create account. Please try again.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account. Please try again.');
       console.error('Signup error:', error);
     } finally {
       setIsLoading(false);

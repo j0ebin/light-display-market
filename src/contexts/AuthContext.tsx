@@ -15,6 +15,7 @@ interface AuthUser {
 interface LoginCredentials {
   email: string;
   password: string;
+  name?: string;
 }
 
 interface AuthContextType {
