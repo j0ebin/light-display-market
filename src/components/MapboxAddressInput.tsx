@@ -50,26 +50,11 @@ export const MapboxAddressInput: React.FC<MapboxAddressInputProps> = ({
 }) => {
   const [suggestions, setSuggestions] = useState<MapboxFeature[]>([]);
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout>();
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [justSelected, setJustSelected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Try to get user's location for better results
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.longitude, position.coords.latitude]);
-        },
-        (error) => {
-          console.log('Geolocation error:', error);
-        }
-      );
-    }
-  }, []);
 
   const fetchSuggestions = async (query: string) => {
     if (!query.trim() || justSelected) {
@@ -94,13 +79,9 @@ export const MapboxAddressInput: React.FC<MapboxAddressInputProps> = ({
         types: 'address,place,poi',
         language: 'en',
         limit: '5',
-        autocomplete: 'true'
+        autocomplete: 'true',
+        proximity: 'none'
       });
-
-      // Add proximity if we have user's location
-      if (userLocation) {
-        params.append('proximity', `${userLocation[0]},${userLocation[1]}`);
-      }
 
       const response = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${params}`
