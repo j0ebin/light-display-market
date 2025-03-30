@@ -1,10 +1,9 @@
-
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Set Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1IjoiZnJpZmViIiwiYSI6ImNqOW1ndDJ3eDBzanMzM3F6ZTZiYWk3aTUifQ.OQ3YHA1tVZIREuS37uOn4g';
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 interface MapProps {
   latitude: number;

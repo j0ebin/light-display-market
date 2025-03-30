@@ -41,8 +41,6 @@ interface DisplayEditFormProps {
   onChange: (display: ViewDisplay | null) => void;
 }
 
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiZnJpZmViIiwiYSI6ImNqOW1ndDJ3eDBzanMzM3F6ZTZiYWk3aTUifQ.OQ3YHA1tVZIREuS37uOn4g';
-
 const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
   display,
   onSave,
