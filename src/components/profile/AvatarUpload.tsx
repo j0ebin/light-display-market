@@ -42,8 +42,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       }
 
       // Check file type
-      if (!file.type.startsWith('image/')) {
-        throw new Error('File must be an image');
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('File must be a JPEG, PNG, GIF, or WebP image');
       }
 
       // Ensure we have a user ID
@@ -51,10 +52,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         throw new Error('User ID is required for avatar upload');
       }
 
+      // Get the current session to ensure we're authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Authentication required for avatar upload');
+      }
+
       // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      if (!fileExt || !['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+        throw new Error('Invalid file extension');
+      }
+
       // Create a folder structure with user ID
-      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = `${session.user.id}/${Date.now()}.${fileExt}`;
       
       console.log('Uploading file:', {
         bucket: 'avatars',
@@ -72,6 +83,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
+        if (uploadError.message.includes('row-level security')) {
+          throw new Error('Permission denied. Please ensure you are logged in.');
+        }
         throw uploadError;
       }
 
