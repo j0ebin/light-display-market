@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Save } from 'lucide-react';
+import AvatarUpload from './AvatarUpload';
 
 export interface ProfileFormValues {
   fullName: string;
@@ -33,14 +32,20 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
     }
   });
 
+  const handleAvatarUpdated = (url: string) => {
+    // The avatar update is handled in the AvatarUpload component
+    // We don't need to do anything here as the user metadata is updated automatically
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
         <div className="flex flex-col md:flex-row gap-6">
-          <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background">
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
-            <AvatarFallback>{user?.email?.charAt(0)?.toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <AvatarUpload 
+            user={user}
+            onAvatarUpdated={handleAvatarUpdated}
+            size="md"
+          />
           
           <div className="flex-1 space-y-4">
             <FormField

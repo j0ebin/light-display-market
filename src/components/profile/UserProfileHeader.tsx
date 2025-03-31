@@ -1,9 +1,8 @@
-
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 import { Display } from '@/types/sequence';
+import AvatarUpload from './AvatarUpload';
 
 interface UserProfileHeaderProps {
   user: any;
@@ -16,12 +15,19 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
   userDisplay,
   onEditProfile
 }) => {
+  const handleAvatarUpdated = (url: string) => {
+    // The avatar update is handled in the AvatarUpload component
+    // We don't need to do anything here as the user metadata is updated automatically
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start">
-      <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background">
-        <AvatarImage src={user?.user_metadata?.avatar_url} />
-        <AvatarFallback>{user?.email?.charAt(0)?.toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <AvatarUpload 
+        user={user}
+        onAvatarUpdated={handleAvatarUpdated}
+        size="md"
+        editable={false}
+      />
       
       <div className="flex-1">
         <h1 className="text-3xl font-bold">{user?.user_metadata?.full_name || user?.email}</h1>

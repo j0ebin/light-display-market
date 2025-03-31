@@ -112,11 +112,13 @@ const UserProfile = () => {
       <NavBar />
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          <UserProfileHeader 
-            user={user}
-            userDisplay={userDisplay}
-            onEditProfile={handleEditProfile}
-          />
+          {!isEditing && (
+            <UserProfileHeader 
+              user={user}
+              userDisplay={userDisplay}
+              onEditProfile={handleEditProfile}
+            />
+          )}
           
           {isEditing ? (
             <UserProfileForm 
