@@ -571,7 +571,7 @@ const EditDisplay = () => {
                   </div>
 
                   <div>
-                    <Label>YouTube Video URL (optional)</Label>
+                    <Label>Youtube/Vimeo Video URL of Song on Your Display</Label>
                     <Input
                       value={song.youtube_url || ''}
                       onChange={e => updateSong(index, 'youtube_url', e.target.value)}
