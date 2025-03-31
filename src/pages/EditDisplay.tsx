@@ -188,38 +188,42 @@ const EditDisplay = () => {
           images: [...prev.images, previewUrl]
         }));
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `display-images/${fileName}`;
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `display-images/${fileName}`;
 
-        const { error: uploadError, data } = await supabase.storage
-          .from('displays')
-          .upload(filePath, file);
+          const { error: uploadError, data } = await supabase.storage
+            .from('displays')
+            .upload(filePath, file);
 
-        if (uploadError) {
+          if (uploadError) throw uploadError;
+
+          // Get the permanent public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('displays')
+            .getPublicUrl(filePath);
+
+          // Replace the preview URL with the permanent URL
+          setForm(prev => ({
+            ...prev,
+            images: prev.images.map(url => url === previewUrl ? publicUrl : url)
+          }));
+
+          // Clean up the preview URL
+          URL.revokeObjectURL(previewUrl);
+
+          return publicUrl;
+        } catch (error) {
           // Remove the preview URL if upload fails
           setForm(prev => ({
             ...prev,
             images: prev.images.filter(url => url !== previewUrl)
           }));
-          throw uploadError;
+          // Clean up the preview URL
+          URL.revokeObjectURL(previewUrl);
+          throw error;
         }
-
-        // Get the permanent public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('displays')
-          .getPublicUrl(filePath);
-
-        // Replace the preview URL with the permanent URL
-        setForm(prev => ({
-          ...prev,
-          images: prev.images.map(url => url === previewUrl ? publicUrl : url)
-        }));
-
-        // Clean up the preview URL
-        URL.revokeObjectURL(previewUrl);
-
-        return publicUrl;
       });
 
       await Promise.all(uploadPromises);
@@ -453,20 +457,27 @@ const EditDisplay = () => {
                     alt={`Display ${index + 1}`}
                     className="w-full h-full object-cover transition-opacity duration-200"
                     onLoad={(e) => {
-                      // Remove loading state once image is loaded
+                      // Make image visible once loaded
                       (e.target as HTMLImageElement).style.opacity = '1';
+                      // Hide the loading overlay
+                      const loadingOverlay = (e.target as HTMLImageElement).nextElementSibling;
+                      if (loadingOverlay) {
+                        (loadingOverlay as HTMLElement).style.opacity = '0';
+                      }
                     }}
                     style={{ opacity: '0' }}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/50 transition-opacity duration-200" 
-                       style={{ opacity: uploadingImages ? '1' : '0' }}>
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center bg-background/50 transition-opacity duration-200" 
+                    style={{ opacity: '1' }}
+                  >
                     <Loader2 className="h-6 w-6 animate-spin" />
                   </div>
                   <Button
                     type="button"
                     variant="destructive"
                     size="icon"
-                    className="absolute top-2 right-2"
+                    className="absolute top-2 right-2 z-10"
                     onClick={() => removeImage(index)}
                     disabled={uploadingImages}
                   >
