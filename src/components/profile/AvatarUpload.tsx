@@ -48,34 +48,57 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
       // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      // Create a folder structure with user ID
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
       
+      console.log('Uploading file:', {
+        bucket: 'avatars',
+        filePath,
+        fileSize: file.size,
+        fileType: file.type
+      });
+
       const { data, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
+        .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Change to true to allow overwriting
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', publicUrl);
 
       // Update user metadata
       const { error: updateError } = await supabase.auth.updateUser({
         data: { avatar_url: publicUrl }
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Metadata update error:', updateError);
+        throw updateError;
+      }
 
       onAvatarUpdated(publicUrl);
       toast.success('Profile picture updated successfully');
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update profile picture');
+    } finally {
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
