@@ -19,6 +19,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, X, Upload } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
+import { Json } from '@/integrations/supabase/types';
 
 interface DisplaySong {
   id?: string;
@@ -26,7 +27,18 @@ interface DisplaySong {
   artist: string;
   year_introduced: number;
   youtube_url?: string;
-  display_id?: string;
+  display_year_id?: string;
+}
+
+interface DisplaySchedule {
+  start_date: string;
+  end_date: string;
+  days: string[];
+  hours: {
+    start: string;
+    end: string;
+  };
+  [key: string]: unknown;  // Add index signature to make it compatible with Json type
 }
 
 interface DisplayForm {
@@ -35,7 +47,7 @@ interface DisplayForm {
   location: string;
   display_type: string;
   holiday_type: string[];
-  schedule: string;
+  schedule: DisplaySchedule | null;
   images: string[];
   songs: DisplaySong[];
 }
@@ -48,7 +60,7 @@ interface DisplayData {
   location: string;
   display_type: string;
   holiday_type: string;
-  schedule: string | null;
+  schedule: Json | null;
   image_url: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -64,7 +76,7 @@ interface SupabaseDisplay {
   location: string;
   display_type: string;
   holiday_type: string;
-  schedule: string | null;
+  schedule: Json | null;
   image_url: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -75,7 +87,21 @@ interface SupabaseDisplay {
     title: string;
     artist: string;
     year_introduced: number;
-    youtube_url?: string;
+    sequence_file_url: string | null;
+  }>;
+}
+
+interface DisplayYear {
+  id: string;
+  display_id: number;
+  year: number;
+  description: string | null;
+  display_songs?: Array<{
+    id: string;
+    title: string;
+    artist: string;
+    year_introduced: number;
+    sequence_file_url: string | null;
   }>;
 }
 
@@ -101,7 +127,7 @@ const EditDisplay = () => {
     location: '',
     display_type: 'Residential',
     holiday_type: ['Christmas'],
-    schedule: '',
+    schedule: null,
     images: [],
     songs: [{ ...INITIAL_SONG }]
   });
@@ -118,8 +144,23 @@ const EditDisplay = () => {
 
   const loadDisplay = async (displayId: string) => {
     try {
-      const { data: rawDisplay, error } = await supabase
+      // First get the display
+      const { data: rawDisplay, error: displayError } = await supabase
         .from('displays')
+        .select('*')
+        .eq('id', parseInt(displayId, 10))
+        .single();
+
+      if (displayError) throw displayError;
+
+      // Then get the latest display year and its songs
+      type DisplayYearResponse = {
+        data: DisplayYear | null;
+        error: any;
+      };
+
+      const { data: displayYear, error: yearError } = await supabase
+        .from('display_years')
         .select(`
           *,
           display_songs (
@@ -127,19 +168,32 @@ const EditDisplay = () => {
             title,
             artist,
             year_introduced,
-            youtube_url
+            sequence_file_url
           )
         `)
-        .eq('id', parseInt(displayId, 10))
-        .single();
+        .eq('display_id', parseInt(displayId, 10))
+        .order('year', { ascending: false })
+        .limit(1)
+        .single() as unknown as DisplayYearResponse;
 
-      if (error) throw error;
+      if (yearError && yearError.code !== 'PGRST116') { // Ignore "no rows returned" error
+        throw yearError;
+      }
 
       if (rawDisplay) {
         const display = rawDisplay as unknown as SupabaseDisplay;
-        const displaySongs = Array.isArray(display.display_songs) 
-          ? display.display_songs 
-          : [{ ...INITIAL_SONG }];
+        let songs: DisplaySong[] = [{ ...INITIAL_SONG }];
+        
+        if (displayYear && Array.isArray(displayYear.display_songs)) {
+          songs = displayYear.display_songs.map(song => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            year_introduced: song.year_introduced,
+            youtube_url: song.sequence_file_url || undefined,
+            display_year_id: displayYear.id
+          }));
+        }
 
         setForm({
           name: display.name || '',
@@ -147,9 +201,9 @@ const EditDisplay = () => {
           location: display.location || '',
           display_type: display.display_type || 'Residential',
           holiday_type: display.holiday_type ? display.holiday_type.split(',') : ['Christmas'],
-          schedule: display.schedule || '',
+          schedule: display.schedule as DisplaySchedule | null,
           images: display.image_url ? [display.image_url] : [],
-          songs: displaySongs
+          songs
         });
       }
     } catch (error) {
@@ -289,28 +343,36 @@ const EditDisplay = () => {
         throw new Error('Could not get user ID');
       }
 
+      // Validate required fields
+      if (!form.name || !form.location) {
+        throw new Error('Name and location are required');
+      }
+
       const displayData = {
         user_id: supabaseUser.id,
-        name: form.name,
-        description: form.description,
-        location: form.location,
-        display_type: form.display_type,
-        holiday_type: form.holiday_type.join(','),
-        schedule: form.schedule,
+        name: form.name.trim(),
+        description: form.description?.trim() || null,
+        location: form.location.trim(),
+        display_type: form.display_type || 'Residential',
+        holiday_type: Array.isArray(form.holiday_type) ? form.holiday_type.join(',') : form.holiday_type,
+        schedule: form.schedule as Json,
         image_url: form.images[0] || null,
         updated_at: new Date().toISOString()
       };
 
       let displayId = id;
       if (!id) {
-        // Create new display
+        // Create new display - let Supabase handle ID generation
         const { data: newDisplay, error: createError } = await supabase
           .from('displays')
           .insert([displayData])
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Error creating display:', createError);
+          throw new Error(createError.message || 'Failed to create display');
+        }
         displayId = newDisplay?.id?.toString();
       } else {
         // Update existing display
@@ -319,21 +381,69 @@ const EditDisplay = () => {
           .update(displayData)
           .eq('id', parseInt(id, 10));
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error updating display:', updateError);
+          throw new Error(updateError.message || 'Failed to update display');
+        }
       }
 
       // Handle songs
       if (displayId) {
-        const { error: songsError } = await supabase
-          .from('display_songs')
-          .upsert(
-            form.songs.map(song => ({
-              ...song,
-              display_id: parseInt(displayId, 10)
-            }))
-          );
+        // Create or get the display year for the current year
+        const currentYear = new Date().getFullYear();
+        const { data: displayYear, error: yearError } = await supabase
+          .from('display_years')
+          .upsert({
+            display_id: parseInt(displayId, 10),
+            year: currentYear,
+            description: `${currentYear} Show`
+          })
+          .select()
+          .single();
 
-        if (songsError) throw songsError;
+        if (yearError) {
+          console.error('Error creating display year:', yearError);
+          throw new Error('Failed to create display year');
+        }
+
+        if (!displayYear?.id) {
+          throw new Error('Failed to get display year ID');
+        }
+
+        // Delete existing songs for this display year
+        const { error: deleteError } = await supabase
+          .from('display_songs')
+          .delete()
+          .eq('display_year_id', displayYear.id);
+
+        if (deleteError) {
+          console.error('Error deleting existing songs:', deleteError);
+          throw new Error('Failed to update songs');
+        }
+
+        // Then insert new songs
+        const validSongs = form.songs.filter(song => 
+          song.title?.trim() && 
+          song.artist?.trim() && 
+          song.year_introduced
+        ).map(song => ({
+          title: song.title.trim(),
+          artist: song.artist.trim(),
+          year_introduced: song.year_introduced,
+          sequence_file_url: song.youtube_url?.trim() || null,
+          display_year_id: displayYear.id
+        }));
+
+        if (validSongs.length > 0) {
+          const { error: songsError } = await supabase
+            .from('display_songs')
+            .insert(validSongs);
+
+          if (songsError) {
+            console.error('Error saving songs:', songsError);
+            throw new Error('Failed to save songs');
+          }
+        }
       }
 
       toast({
@@ -346,7 +456,7 @@ const EditDisplay = () => {
       console.error('Error saving display:', error);
       toast({
         title: "Error",
-        description: "Failed to save display.",
+        description: error instanceof Error ? error.message : "Failed to save display.",
         variant: "destructive",
       });
     } finally {
@@ -452,12 +562,33 @@ const EditDisplay = () => {
 
             <div>
               <Label htmlFor="schedule">Schedule</Label>
-              <Input
+              <Textarea
                 id="schedule"
-                value={form.schedule}
-                onChange={e => setForm(prev => ({ ...prev, schedule: e.target.value }))}
-                placeholder="e.g., Daily 6-10pm, Nov 25 - Dec 31"
+                value={form.schedule ? JSON.stringify(form.schedule, null, 2) : ''}
+                onChange={e => {
+                  try {
+                    const scheduleValue = e.target.value ? JSON.parse(e.target.value) : null;
+                    setForm(prev => ({ ...prev, schedule: scheduleValue }));
+                  } catch (error) {
+                    // If the JSON is invalid, don't update the form
+                    console.error('Invalid schedule JSON:', error);
+                  }
+                }}
+                placeholder="Enter schedule in JSON format, e.g.:
+{
+  'start_date': '2025-11-25',
+  'end_date': '2025-12-31',
+  'days': ['Monday', 'Tuesday', 'Wednesday'],
+  'hours': {
+    'start': '18:00',
+    'end': '22:00'
+  }
+}"
+                rows={10}
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Enter your display's schedule in JSON format
+              </p>
             </div>
           </div>
         </Card>

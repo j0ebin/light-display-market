@@ -27,7 +27,15 @@ interface ViewDisplay {
   location: string;
   latitude: number | null;
   longitude: number | null;
-  schedule: string;
+  schedule: {
+    start_date: string;
+    end_date: string;
+    days: string[];
+    hours: {
+      start: string;
+      end: string;
+    };
+  } | null;
   display_type: string;
   holiday_type: string;
   review_rating: number;
@@ -136,10 +144,31 @@ const DisplayEditForm: React.FC<DisplayEditFormProps> = ({
             <Label htmlFor="schedule">Schedule</Label>
             <Textarea
               id="schedule"
-              value={display.schedule}
-              onChange={(e) => handleChange('schedule', e.target.value)}
-              placeholder="Enter display schedule (JSON format)"
+              value={display.schedule ? JSON.stringify(display.schedule, null, 2) : ''}
+              onChange={(e) => {
+                try {
+                  const scheduleValue = e.target.value ? JSON.parse(e.target.value) : null;
+                  handleChange('schedule', scheduleValue);
+                } catch (error) {
+                  // If the JSON is invalid, don't update the form
+                  console.error('Invalid schedule JSON:', error);
+                }
+              }}
+              placeholder="Enter schedule in JSON format, e.g.:
+{
+  'start_date': '2025-11-25',
+  'end_date': '2025-12-31',
+  'days': ['Monday', 'Tuesday', 'Wednesday'],
+  'hours': {
+    'start': '18:00',
+    'end': '22:00'
+  }
+}"
+              rows={10}
             />
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your display's schedule in JSON format
+            </p>
           </div>
 
           <div>
