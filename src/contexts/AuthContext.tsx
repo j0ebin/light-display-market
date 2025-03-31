@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthUser {
+  id?: string;
   email: string;
   name: string;
   picture?: string;
@@ -9,6 +10,8 @@ interface AuthUser {
   user_metadata?: {
     full_name?: string;
     avatar_url?: string;
+    bio?: string;
+    location?: string;
   };
 }
 
@@ -21,11 +24,12 @@ interface LoginCredentials {
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<{ data: any; error: any | null }>;
+  signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
 }
 
@@ -36,6 +40,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing Supabase session
@@ -49,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(userData);
         setIsAuthenticated(true);
+        setIsLoading(false);
       }
     });
 
@@ -65,9 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(userData);
         setIsAuthenticated(true);
+        setIsLoading(false);
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setIsLoading(false);
       }
     });
 
@@ -172,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, signInWithGoogle, signInWithFacebook, logout, getAccessToken }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, signUp, signInWithGoogle, signInWithFacebook, logout, getAccessToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +9,7 @@ import { mockSongsData } from '@/data/mockSongsData';
 import { Song } from '@/types/sequence';
 import { toast } from 'sonner';
 import { useCharity } from '@/hooks/useCharity';
+import { supabase } from '@/lib/supabase';
 
 // Import new components
 import UserProfileHeader from '@/components/profile/UserProfileHeader';
@@ -59,13 +59,24 @@ const UserProfile = () => {
     setIsEditing(true);
   };
 
-  const handleSaveProfile = (values: ProfileFormValues) => {
-    // In a real app, we would save to Supabase or another backend
-    console.log('Saving profile:', values);
-    
-    // Simulate successful save
-    toast.success('Profile updated successfully');
-    setIsEditing(false);
+  const handleSaveProfile = async (values: ProfileFormValues) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: values.fullName,
+          bio: values.bio,
+          location: values.location,
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success('Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    }
   };
 
   const handleCharitySaved = (savedCharity) => {
@@ -122,7 +133,7 @@ const UserProfile = () => {
               </TabsList>
               
               <TabsContent value="display" className="mt-0">
-                <DisplayTab />
+                <DisplayTab userDisplay={userDisplay} />
               </TabsContent>
               
               <TabsContent value="songs" className="mt-0">
