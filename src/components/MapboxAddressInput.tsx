@@ -79,8 +79,7 @@ export const MapboxAddressInput: React.FC<MapboxAddressInputProps> = ({
         types: 'address,place,poi',
         language: 'en',
         limit: '5',
-        autocomplete: 'true',
-        proximity: 'none'
+        autocomplete: 'true'
       });
 
       const response = await fetch(
