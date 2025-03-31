@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, X, Upload } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
@@ -33,7 +34,7 @@ interface DisplayForm {
   description: string;
   location: string;
   display_type: string;
-  holiday_type: string;
+  holiday_type: string[];
   schedule: string;
   images: string[];
   songs: DisplaySong[];
@@ -99,7 +100,7 @@ const EditDisplay = () => {
     description: '',
     location: '',
     display_type: 'Residential',
-    holiday_type: 'Christmas',
+    holiday_type: ['Christmas'],
     schedule: '',
     images: [],
     songs: [{ ...INITIAL_SONG }]
@@ -145,7 +146,7 @@ const EditDisplay = () => {
           description: display.description || '',
           location: display.location || '',
           display_type: display.display_type || 'Residential',
-          holiday_type: display.holiday_type || 'Christmas',
+          holiday_type: display.holiday_type ? display.holiday_type.split(',') : ['Christmas'],
           schedule: display.schedule || '',
           images: display.image_url ? [display.image_url] : [],
           songs: displaySongs
@@ -294,7 +295,7 @@ const EditDisplay = () => {
         description: form.description,
         location: form.location,
         display_type: form.display_type,
-        holiday_type: form.holiday_type,
+        holiday_type: form.holiday_type.join(','),
         schedule: form.schedule,
         image_url: form.images[0] || null,
         updated_at: new Date().toISOString()
@@ -416,20 +417,36 @@ const EditDisplay = () => {
               </div>
 
               <div>
-                <Label htmlFor="holiday_type">Holiday Type</Label>
-                <Select
+                <Label htmlFor="holiday_type">Holidays Display is On</Label>
+                <ToggleGroup
+                  type="multiple"
                   value={form.holiday_type}
-                  onValueChange={value => setForm(prev => ({ ...prev, holiday_type: value }))}
+                  onValueChange={(value) => {
+                    // Ensure at least one value is selected
+                    const newValue = value.length === 0 ? ['Christmas'] : value;
+                    setForm(prev => ({ ...prev, holiday_type: newValue }));
+                  }}
+                  className="flex flex-wrap gap-2 mt-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Christmas">Christmas</SelectItem>
-                    <SelectItem value="Halloween">Halloween</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <ToggleGroupItem value="Christmas" variant="outline">
+                    Christmas
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Halloween" variant="outline">
+                    Halloween
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Thanksgiving" variant="outline">
+                    Thanksgiving
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Fourth of July" variant="outline">
+                    Fourth of July
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Easter" variant="outline">
+                    Easter
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Other" variant="outline">
+                    Other
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
 
