@@ -176,35 +176,58 @@ const EditDisplay = () => {
 
     setUploadingImages(true);
     const files = Array.from(e.target.files).slice(0, remainingSlots);
-    const uploadPromises = files.map(async (file) => {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `display-images/${fileName}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('displays')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('displays')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    });
-
+    
     try {
-      const uploadedUrls = await Promise.all(uploadPromises);
-      setForm(prev => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls]
-      }));
+      const uploadPromises = files.map(async (file) => {
+        // Create a preview URL first
+        const previewUrl = URL.createObjectURL(file);
+        
+        // Add to form state immediately for preview
+        setForm(prev => ({
+          ...prev,
+          images: [...prev.images, previewUrl]
+        }));
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `display-images/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('displays')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          // Remove the preview URL if upload fails
+          setForm(prev => ({
+            ...prev,
+            images: prev.images.filter(url => url !== previewUrl)
+          }));
+          throw uploadError;
+        }
+
+        // Get the permanent public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('displays')
+          .getPublicUrl(filePath);
+
+        // Replace the preview URL with the permanent URL
+        setForm(prev => ({
+          ...prev,
+          images: prev.images.map(url => url === previewUrl ? publicUrl : url)
+        }));
+
+        // Clean up the preview URL
+        URL.revokeObjectURL(previewUrl);
+
+        return publicUrl;
+      });
+
+      await Promise.all(uploadPromises);
     } catch (error) {
       console.error('Error uploading images:', error);
       toast({
         title: "Error",
-        description: "Failed to upload images.",
+        description: "Failed to upload images. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -424,18 +447,28 @@ const EditDisplay = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {form.images.map((url, index) => (
-                <div key={index} className="relative aspect-video">
+                <div key={url} className="relative aspect-video bg-muted rounded-lg overflow-hidden">
                   <img
                     src={url}
                     alt={`Display ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover transition-opacity duration-200"
+                    onLoad={(e) => {
+                      // Remove loading state once image is loaded
+                      (e.target as HTMLImageElement).style.opacity = '1';
+                    }}
+                    style={{ opacity: '0' }}
                   />
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/50 transition-opacity duration-200" 
+                       style={{ opacity: uploadingImages ? '1' : '0' }}>
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
                   <Button
                     type="button"
                     variant="destructive"
                     size="icon"
                     className="absolute top-2 right-2"
                     onClick={() => removeImage(index)}
+                    disabled={uploadingImages}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -446,21 +479,22 @@ const EditDisplay = () => {
             {form.images.length < MAX_IMAGES && (
               <div>
                 <Label htmlFor="images">Add Images</Label>
-                <Input
-                  id="images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  disabled={uploadingImages}
-                  className="mt-2"
-                />
-                {uploadingImages && (
-                  <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading images...
-                  </div>
-                )}
+                <div className="mt-2 space-y-2">
+                  <Input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    disabled={uploadingImages}
+                  />
+                  {uploadingImages && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading images...
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
