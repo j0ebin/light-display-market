@@ -46,6 +46,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         throw new Error('File must be an image');
       }
 
+      // Ensure we have a user ID
+      if (!user?.id) {
+        throw new Error('User ID is required for avatar upload');
+      }
+
       // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       // Create a folder structure with user ID
@@ -62,7 +67,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true // Change to true to allow overwriting
+          upsert: true
         });
 
       if (uploadError) {
