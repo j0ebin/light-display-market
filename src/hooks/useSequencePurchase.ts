@@ -1,52 +1,23 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Sequence } from '@/types/sequence';
+import type { Sequence } from '@/types/sequence';
 
 // Define the type for purchase details response
 interface PurchaseDetailsResponse {
   id: string;
-  sequence_id: string;
-  amount_paid: number;
   created_at: string;
+  status: string;
 }
 
 export const useSequencePurchase = (sequenceId: string | undefined) => {
-  const [isPurchased, setIsPurchased] = useState(false);
   const [isPurchaseProcessing, setIsPurchaseProcessing] = useState(false);
-  const [isCheckingPurchase, setIsCheckingPurchase] = useState(true);
+  const [isPurchased, setIsPurchased] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const checkPurchaseStatus = async () => {
-    if (!user || !sequenceId) {
-      setIsPurchased(false);
-      setIsCheckingPurchase(false);
-      return;
-    }
-    
-    try {
-      setIsCheckingPurchase(true);
-      const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('get_purchase_details', {
-        p_user_id: user.id,
-        p_sequence_id: sequenceId
-      });
-      
-      if (error) throw error;
-      
-      // Check if data exists and has items
-      setIsPurchased(data && Array.isArray(data) && data.length > 0);
-    } catch (error) {
-      console.error("Error checking purchase status:", error);
-      toast.error("Failed to check purchase status");
-    } finally {
-      setIsCheckingPurchase(false);
-    }
-  };
-  
   const handlePurchase = async (sequence: Sequence) => {
     if (!sequence) return;
     
@@ -61,24 +32,24 @@ export const useSequencePurchase = (sequenceId: string | undefined) => {
     setIsPurchaseProcessing(true);
     
     try {
-      // In a real implementation, this would call your payment API
-      const { data, error } = await supabase.rpc<PurchaseDetailsResponse[]>('create_purchase', {
-        p_user_id: user.id,
-        p_sequence_id: sequenceId,
-        p_amount_paid: sequence.price,
-        p_seller_id: sequence.creator.id,
-        p_status: 'completed'
+      // Create a Stripe checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          sequenceId: sequence.id,
+          userId: user.id,
+          price: sequence.price,
+          title: sequence.title,
+          sellerUserId: sequence.creator.id,
+          songTitle: sequence.song?.title || sequence.title,
+          songArtist: sequence.song?.artist || 'Unknown Artist',
+          callbackUrl: `${window.location.origin}/purchase-success/${sequence.id}`
+        }
       });
       
       if (error) throw error;
       
-      setIsPurchased(true);
-      toast.success("Purchase successful", {
-        description: `You have successfully purchased ${sequence.title}`,
-      });
-      
-      // Start download after successful purchase
-      handleDownload(sequence);
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
       
     } catch (error) {
       console.error('Purchase error:', error);
@@ -111,10 +82,8 @@ export const useSequencePurchase = (sequenceId: string | undefined) => {
   };
 
   return {
-    isPurchased,
     isPurchaseProcessing,
-    isCheckingPurchase,
-    checkPurchaseStatus,
+    isPurchased,
     handlePurchase,
     handleDownload
   };

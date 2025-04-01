@@ -15,6 +15,7 @@
     "@mapbox/search-js-core": "^1.0.0",
     "@mapbox/search-js-react": "^1.0.0",
     "@mapbox/search-js-web": "^1.0.0",
+    "@pipedream/mcp": "^0.0.1",
     "@prisma/client": "^6.5.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
