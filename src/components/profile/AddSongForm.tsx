@@ -41,7 +41,10 @@ interface DisplaySong {
   duration?: string;
   genre?: string;
   sequence_available: boolean;
-  album_cover_url?: string;
+  sequence_file_url: string | null;
+  sequence_price: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded, displayId }) => {
@@ -169,7 +172,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         sequence_available: false,
         duration: values.duration,
         genre: values.genre || null,
-        album_cover_url: albumCoverUrl
+        sequence_file_url: albumCoverUrl // Temporarily store album cover URL here
       };
       console.log('Inserting song:', songData);
 
@@ -193,7 +196,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         duration: insertedSong.duration || '0:00',
         year: insertedSong.year_introduced,
         genre: insertedSong.genre,
-        albumCover: insertedSong.album_cover_url
+        albumCover: insertedSong.sequence_file_url // Get album cover URL from sequence_file_url
       };
 
       // Call the onSongAdded callback with the new song
