@@ -282,7 +282,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Year</FormLabel>
+                  <FormLabel>Year First Added to Display</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
