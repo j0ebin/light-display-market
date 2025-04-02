@@ -57,8 +57,8 @@ const formSchema = z.object({
   artist: z.string().min(1, 'Artist is required'),
   duration: z.string().regex(/^\d+:\d{2}$/, 'Duration must be in format M:SS or MM:SS'),
   genre: z.string().optional(),
-  year: z.number().min(1900).max(new Date().getFullYear()),
-  albumCover: z.instanceof(File).optional(),
+  year: z.coerce.number().min(1900).max(new Date().getFullYear()),
+  albumCover: z.any().optional(),
 });
 
 const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded, displayId, editingSong }) => {
@@ -84,7 +84,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         title: editingSong.title,
         artist: editingSong.artist,
         duration: editingSong.duration,
-        genre: editingSong.genre,
+        genre: editingSong.genre || '',
         year: editingSong.year || new Date().getFullYear(),
       });
       setPreviewUrl(editingSong.albumCover || null);
@@ -139,44 +139,42 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
   const handleSubmit = async (values: FormValues) => {
     try {
       setIsUploading(true);
+      console.log('Form values:', values); // Debug log
 
-      // Get the display year ID
-      let yearData = await supabase
+      // Get or create the display year
+      const getYearResult = await supabase
         .from('display_years')
         .select('id')
         .eq('display_id', displayId)
         .eq('year', values.year)
-        .single()
-        .then(({ data }) => data);
+        .single();
 
-      if (!yearData) {
-        // Year doesn't exist, create it
-        const { data: newYearData, error: createYearError } = await supabase
-          .from('display_years')
-          .insert({ display_id: displayId, year: values.year })
-          .select('id')
-          .single();
+      const yearData = getYearResult.error && getYearResult.error.code === 'PGRST116'
+        ? await createDisplayYear(values.year)
+        : getYearResult.error
+          ? (() => { throw getYearResult.error })()
+          : getYearResult.data;
 
-        if (createYearError) throw createYearError;
-        yearData = newYearData;
-      }
+      if (!yearData) throw new Error('Year data not found');
 
       // Upload album cover if provided
       let albumCoverUrl = previewUrl;
-      if (values.albumCover) {
+      if (values.albumCover instanceof File) {
         albumCoverUrl = await uploadAlbumCover(values.albumCover);
       }
 
       const songData = {
-        title: values.title,
-        artist: values.artist,
-        year_introduced: values.year,
+        title: values.title.trim(),
+        artist: values.artist.trim(),
+        year_introduced: Number(values.year),
         display_year_id: yearData.id,
         sequence_available: false,
-        duration: values.duration,
-        genre: values.genre || null,
+        duration: values.duration.trim(),
+        genre: values.genre?.trim() || null,
         album_cover_url: albumCoverUrl
       };
+
+      console.log('Song data to submit:', songData); // Debug log
 
       let insertedSong;
       if (editingSong) {
@@ -185,20 +183,22 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
           .from('display_songs')
           .update(songData)
           .eq('id', editingSong.id)
-          .select<'display_songs', DisplaySong>()
+          .select()
           .single();
 
         if (updateError) throw updateError;
+        if (!updatedSong) throw new Error('Failed to update song');
         insertedSong = updatedSong;
       } else {
         // Insert new song
         const { data: newSong, error: insertError } = await supabase
           .from('display_songs')
           .insert(songData)
-          .select<'display_songs', DisplaySong>()
+          .select()
           .single();
 
         if (insertError) throw insertError;
+        if (!newSong) throw new Error('Failed to insert song');
         insertedSong = newSong;
       }
 
@@ -209,8 +209,8 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         artist: insertedSong.artist,
         duration: insertedSong.duration || '0:00',
         year: insertedSong.year_introduced,
-        genre: insertedSong.genre,
-        albumCover: insertedSong.album_cover_url
+        genre: insertedSong.genre || undefined,
+        albumCover: insertedSong.album_cover_url || undefined
       };
 
       onSongAdded(newSong);
@@ -232,6 +232,22 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const createDisplayYear = async (year: number) => {
+    const { data, error } = await supabase
+      .from('display_years')
+      .insert({ 
+        display_id: displayId, 
+        year: year,
+        description: `Songs from ${year}`
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Failed to create year');
+    return data;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
