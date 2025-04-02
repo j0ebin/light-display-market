@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
+import { Upload, Image as ImageIcon, X, Plus, Loader2 } from 'lucide-react';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Song } from '@/types/sequence';
-import { Upload, Image as ImageIcon } from 'lucide-react';
 
 interface AddSongFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSongAdded: (song: Song) => void;
   displayId: string;
+  editingSong?: Song | null;
 }
 
 interface FormValues {
@@ -48,120 +52,121 @@ interface DisplaySong {
   album_cover_url: string | null;
 }
 
-const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded, displayId }) => {
+const formSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  artist: z.string().min(1, 'Artist is required'),
+  duration: z.string().regex(/^\d+:\d{2}$/, 'Duration must be in format M:SS or MM:SS'),
+  genre: z.string().optional(),
+  year: z.number().min(1900).max(new Date().getFullYear()),
+  albumCover: z.instanceof(File).optional(),
+});
+
+const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded, displayId, editingSong }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const supabase = useSupabaseClient();
 
   const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
       artist: '',
       duration: '',
       genre: '',
-      year: new Date().getFullYear()
+      year: new Date().getFullYear(),
     }
   });
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Update form value
-    form.setValue('albumCover', file);
-
-    // Create preview URL
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-  };
+  // Reset form when editing song changes
+  useEffect(() => {
+    if (editingSong) {
+      form.reset({
+        title: editingSong.title,
+        artist: editingSong.artist,
+        duration: editingSong.duration,
+        genre: editingSong.genre,
+        year: editingSong.year || new Date().getFullYear(),
+      });
+      setPreviewUrl(editingSong.albumCover || null);
+    } else {
+      form.reset({
+        title: '',
+        artist: '',
+        duration: '',
+        genre: '',
+        year: new Date().getFullYear(),
+      });
+      setPreviewUrl(null);
+    }
+  }, [editingSong, form]);
 
   const uploadAlbumCover = async (file: File): Promise<string | null> => {
-    try {
-      console.log('Starting album cover upload:', { fileName: file.name, fileSize: file.size, fileType: file.type });
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `album-covers/${fileName}`;
-      
-      console.log('Generated file path:', { filePath, fileExt });
+    if (!file) return null;
 
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('File size must be less than 5MB');
-      }
-
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        throw new Error('File must be a JPEG, PNG, GIF, or WebP image');
-      }
-
-      console.log('File validation passed');
-
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('displays')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      console.log('Upload response:', { uploadError, uploadData });
-
-      if (uploadError) {
-        console.error('Upload error details:', {
-          message: uploadError.message,
-          name: uploadError.name,
-          stack: uploadError.stack
-        });
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage
-        .from('displays')
-        .getPublicUrl(filePath);
-
-      console.log('Generated public URL:', data.publicUrl);
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading album cover:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload album cover');
-      return null;
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Album cover must be less than 5MB');
     }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Album cover must be JPEG, PNG, GIF, or WebP');
+    }
+
+    const fileName = `${Date.now()}-${file.name}`;
+    const filePath = `album-covers/${fileName}`;
+    console.log('Uploading album cover to path:', filePath);
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('displays')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Album cover upload error:', uploadError);
+      throw uploadError;
+    }
+
+    console.log('Album cover upload successful:', uploadData);
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('displays')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (values: FormValues) => {
     try {
       setIsUploading(true);
-      console.log('Starting song submission:', values);
+
+      // Get the display year ID
+      let yearData = await supabase
+        .from('display_years')
+        .select('id')
+        .eq('display_id', displayId)
+        .eq('year', values.year)
+        .single()
+        .then(({ data }) => data);
+
+      if (!yearData) {
+        // Year doesn't exist, create it
+        const { data: newYearData, error: createYearError } = await supabase
+          .from('display_years')
+          .insert({ display_id: displayId, year: values.year })
+          .select('id')
+          .single();
+
+        if (createYearError) throw createYearError;
+        yearData = newYearData;
+      }
 
       // Upload album cover if provided
-      let albumCoverUrl = null;
+      let albumCoverUrl = previewUrl;
       if (values.albumCover) {
-        console.log('Uploading album cover...');
         albumCoverUrl = await uploadAlbumCover(values.albumCover);
-        console.log('Album cover upload result:', albumCoverUrl);
       }
 
-      // First, insert the display year if it doesn't exist
-      console.log('Upserting display year:', { displayId, year: values.year });
-      const { data: yearData, error: yearError } = await supabase
-        .from('display_years')
-        .upsert({
-          display_id: parseInt(displayId),
-          year: values.year,
-          description: `Songs from ${values.year}`
-        }, {
-          onConflict: 'display_id,year'
-        })
-        .select<'display_years', DisplayYear>()
-        .single();
-
-      if (yearError) {
-        console.error('Year upsert error:', yearError);
-        throw yearError;
-      }
-      console.log('Year upsert successful:', yearData);
-
-      // Then insert the song
       const songData = {
         title: values.title,
         artist: values.artist,
@@ -170,21 +175,32 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         sequence_available: false,
         duration: values.duration,
         genre: values.genre || null,
-        album_cover_url: albumCoverUrl // Store album cover URL in the correct column
+        album_cover_url: albumCoverUrl
       };
-      console.log('Inserting song:', songData);
 
-      const { data: insertedSong, error: songError } = await supabase
-        .from('display_songs')
-        .insert(songData)
-        .select<'display_songs', DisplaySong>()
-        .single();
+      let insertedSong;
+      if (editingSong) {
+        // Update existing song
+        const { data: updatedSong, error: updateError } = await supabase
+          .from('display_songs')
+          .update(songData)
+          .eq('id', editingSong.id)
+          .select<'display_songs', DisplaySong>()
+          .single();
 
-      if (songError) {
-        console.error('Song insert error:', songError);
-        throw songError;
+        if (updateError) throw updateError;
+        insertedSong = updatedSong;
+      } else {
+        // Insert new song
+        const { data: newSong, error: insertError } = await supabase
+          .from('display_songs')
+          .insert(songData)
+          .select<'display_songs', DisplaySong>()
+          .single();
+
+        if (insertError) throw insertError;
+        insertedSong = newSong;
       }
-      console.log('Song insert successful:', insertedSong);
 
       // Transform the database response to match the Song type
       const newSong: Song = {
@@ -194,34 +210,49 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         duration: insertedSong.duration || '0:00',
         year: insertedSong.year_introduced,
         genre: insertedSong.genre,
-        albumCover: insertedSong.album_cover_url // Get album cover URL from the correct field
+        albumCover: insertedSong.album_cover_url
       };
 
-      // Call the onSongAdded callback with the new song
       onSongAdded(newSong);
-      
-      // Show success message
-      toast.success('Song added successfully');
-      
-      // Close the modal
+      toast({
+        variant: "default",
+        title: "Success",
+        description: editingSong ? 'Song updated successfully' : 'Song added successfully'
+      });
       onClose();
-      
-      // Reset the form and preview
       form.reset();
       setPreviewUrl(null);
     } catch (error) {
       console.error('Form submission error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to add song');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to save song'
+      });
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue('albumCover', file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    form.setValue('albumCover', undefined);
+    setPreviewUrl(null);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Song</DialogTitle>
+          <DialogTitle>{editingSong ? 'Edit Song' : 'Add New Song'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -295,70 +326,51 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="albumCover"
-              render={({ field: { value, onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Album Cover (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="flex flex-col items-center gap-4">
-                      {previewUrl ? (
-                        <div className="relative w-32 h-32">
-                          <img
-                            src={previewUrl}
-                            alt="Album cover preview"
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="absolute -top-2 -right-2"
-                            onClick={() => {
-                              setPreviewUrl(null);
-                              onChange(undefined);
-                            }}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted">
-                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="album-cover-upload"
-                            onChange={handleImageChange}
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => document.getElementById('album-cover-upload')?.click()}
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Cover
-                          </Button>
-                        </div>
-                      )}
+            <div className="space-y-2">
+              <FormLabel>Album Cover (Optional)</FormLabel>
+              <div className="flex items-center gap-4">
+                {previewUrl ? (
+                  <div className="relative">
+                    <img
+                      src={previewUrl}
+                      alt="Album cover preview"
+                      className="h-24 w-24 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive hover:bg-destructive/90"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4 text-white" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer">
+                    <div className="h-24 w-24 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors flex items-center justify-center">
+                      <Plus className="h-8 w-8 text-muted-foreground/50" />
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isUploading}>
-                {isUploading ? 'Adding Song...' : 'Add Song'}
+                {isUploading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {editingSong ? 'Save Changes' : 'Add Song'}
               </Button>
             </div>
           </form>
