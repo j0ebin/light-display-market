@@ -72,23 +72,57 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
 
   const uploadAlbumCover = async (file: File): Promise<string | null> => {
     try {
+      console.log('Starting album cover upload:', { fileName: file.name, fileSize: file.size, fileType: file.type });
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `album-covers/${fileName}`;
+      
+      console.log('Generated file path:', { filePath, fileExt });
 
-      const { error: uploadError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file);
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must be less than 5MB');
+      }
 
-      if (uploadError) throw uploadError;
+      // Check file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('File must be a JPEG, PNG, GIF, or WebP image');
+      }
+
+      console.log('File validation passed');
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('displays')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      console.log('Upload response:', { uploadError, uploadData });
+
+      if (uploadError) {
+        console.error('Upload error details:', {
+          message: uploadError.message,
+          name: uploadError.name,
+          stack: uploadError.stack
+        });
+        if (uploadError.message.includes('bucket')) {
+          throw new Error('Storage configuration error. Please contact support.');
+        }
+        throw uploadError;
+      }
 
       const { data } = supabase.storage
-        .from('public')
+        .from('displays')
         .getPublicUrl(filePath);
 
+      console.log('Generated public URL:', data.publicUrl);
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading album cover:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload album cover');
       return null;
     }
   };
@@ -96,14 +130,18 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
   const handleSubmit = async (values: FormValues) => {
     try {
       setIsUploading(true);
+      console.log('Starting song submission:', values);
 
       // Upload album cover if provided
       let albumCoverUrl = null;
       if (values.albumCover) {
+        console.log('Uploading album cover...');
         albumCoverUrl = await uploadAlbumCover(values.albumCover);
+        console.log('Album cover upload result:', albumCoverUrl);
       }
 
       // First, insert the display year if it doesn't exist
+      console.log('Upserting display year:', { displayId, year: values.year });
       const { data: yearData, error: yearError } = await supabase
         .from('display_years')
         .upsert({
@@ -116,35 +154,46 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         .select<'display_years', DisplayYear>()
         .single();
 
-      if (yearError) throw yearError;
+      if (yearError) {
+        console.error('Year upsert error:', yearError);
+        throw yearError;
+      }
+      console.log('Year upsert successful:', yearData);
 
       // Then insert the song
-      const { data: songData, error: songError } = await supabase
+      const songData = {
+        title: values.title,
+        artist: values.artist,
+        year_introduced: values.year,
+        display_year_id: yearData.id,
+        sequence_available: false,
+        duration: values.duration,
+        genre: values.genre || null,
+        album_cover_url: albumCoverUrl
+      };
+      console.log('Inserting song:', songData);
+
+      const { data: insertedSong, error: songError } = await supabase
         .from('display_songs')
-        .insert({
-          title: values.title,
-          artist: values.artist,
-          year_introduced: values.year,
-          display_year_id: yearData.id,
-          sequence_available: false,
-          duration: values.duration,
-          genre: values.genre || null,
-          album_cover_url: albumCoverUrl
-        })
+        .insert(songData)
         .select<'display_songs', DisplaySong>()
         .single();
 
-      if (songError) throw songError;
+      if (songError) {
+        console.error('Song insert error:', songError);
+        throw songError;
+      }
+      console.log('Song insert successful:', insertedSong);
 
       // Transform the database response to match the Song type
       const newSong: Song = {
-        id: parseInt(songData.id),
-        title: songData.title,
-        artist: songData.artist,
-        duration: songData.duration || '0:00',
-        year: songData.year_introduced,
-        genre: songData.genre,
-        albumCover: songData.album_cover_url
+        id: parseInt(insertedSong.id),
+        title: insertedSong.title,
+        artist: insertedSong.artist,
+        duration: insertedSong.duration || '0:00',
+        year: insertedSong.year_introduced,
+        genre: insertedSong.genre,
+        albumCover: insertedSong.album_cover_url
       };
 
       // Call the onSongAdded callback with the new song
@@ -160,8 +209,8 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
       form.reset();
       setPreviewUrl(null);
     } catch (error) {
-      console.error('Error adding song:', error);
-      toast.error('Failed to add song');
+      console.error('Form submission error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add song');
     } finally {
       setIsUploading(false);
     }
