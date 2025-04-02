@@ -45,6 +45,7 @@ interface DisplaySong {
   sequence_price: number | null;
   created_at: string;
   updated_at: string;
+  album_cover_url: string | null;
 }
 
 const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded, displayId }) => {
@@ -111,9 +112,6 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
           name: uploadError.name,
           stack: uploadError.stack
         });
-        if (uploadError.message.includes('bucket')) {
-          throw new Error('Storage configuration error. Please contact support.');
-        }
         throw uploadError;
       }
 
@@ -172,7 +170,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         sequence_available: false,
         duration: values.duration,
         genre: values.genre || null,
-        sequence_file_url: albumCoverUrl // Temporarily store album cover URL here
+        album_cover_url: albumCoverUrl // Store album cover URL in the correct column
       };
       console.log('Inserting song:', songData);
 
@@ -196,7 +194,7 @@ const AddSongForm: React.FC<AddSongFormProps> = ({ isOpen, onClose, onSongAdded,
         duration: insertedSong.duration || '0:00',
         year: insertedSong.year_introduced,
         genre: insertedSong.genre,
-        albumCover: insertedSong.sequence_file_url // Get album cover URL from sequence_file_url
+        albumCover: insertedSong.album_cover_url // Get album cover URL from the correct field
       };
 
       // Call the onSongAdded callback with the new song
