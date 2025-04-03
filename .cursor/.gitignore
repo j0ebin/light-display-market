@@ -1,0 +1,10 @@
+# Ignore the real mcp.json file with sensitive data
+mcp.json
+
+# Don't ignore the template
+!mcp.json.template
+
+# Other common files to ignore
+.DS_Store
+*.log
+node_modules/ 
