@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, MapPin, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,7 @@ const DisplaySearchBar = ({ searchQuery, setSearchQuery, handleSearch }: Display
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
         <Input 
-          placeholder="Search displays by name, location, or description" 
+          placeholder="Search displays or sequences" 
           className="pl-10 pr-4 py-6"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
