@@ -17,6 +17,7 @@ import UserProfileForm, { ProfileFormValues } from '@/components/profile/UserPro
 import DisplayTab from '@/components/profile/DisplayTab';
 import SongsTab from '@/components/profile/SongsTab';
 import CharityTab from '@/components/profile/CharityTab';
+import EarningsDashboard from '@/components/profile/EarningsDashboard';
 
 const UserProfile = () => {
   const { user, isLoading } = useAuth();
@@ -132,6 +133,7 @@ const UserProfile = () => {
                 <TabsTrigger value="display">My Display</TabsTrigger>
                 <TabsTrigger value="songs">My Songs</TabsTrigger>
                 <TabsTrigger value="charity">Charity</TabsTrigger>
+                <TabsTrigger value="earnings">Earnings</TabsTrigger>
               </TabsList>
               
               <TabsContent value="display" className="mt-0">
@@ -155,6 +157,10 @@ const UserProfile = () => {
                   onCharitySaved={handleCharitySaved}
                   onCancelEditCharity={() => setIsEditingCharity(false)}
                 />
+              </TabsContent>
+
+              <TabsContent value="earnings" className="mt-0">
+                <EarningsDashboard userId={user?.id || ''} />
               </TabsContent>
             </Tabs>
           )}
