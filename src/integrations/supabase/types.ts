@@ -95,6 +95,7 @@ export type Database = {
           title: string
           updated_at: string
           year_introduced: number
+          views_count: number
         }
         Insert: {
           artist: string
@@ -110,6 +111,7 @@ export type Database = {
           title: string
           updated_at?: string
           year_introduced: number
+          views_count?: number
         }
         Update: {
           artist?: string
@@ -125,6 +127,7 @@ export type Database = {
           title?: string
           updated_at?: string
           year_introduced?: number
+          views_count?: number
         }
         Relationships: [
           {
@@ -195,6 +198,9 @@ export type Database = {
           tags: string[] | null
           updated_at: string
           year_started: number | null
+          status: 'active' | 'archived' | 'draft'
+          views_count: number
+          featured: boolean
         }
         Insert: {
           created_at?: string
@@ -212,6 +218,9 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           year_started?: number | null
+          status?: 'active' | 'archived' | 'draft'
+          views_count?: number
+          featured?: boolean
         }
         Update: {
           created_at?: string
@@ -229,6 +238,9 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           year_started?: number | null
+          status?: 'active' | 'archived' | 'draft'
+          views_count?: number
+          featured?: boolean
         }
         Relationships: []
       }
