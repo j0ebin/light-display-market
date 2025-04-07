@@ -8,7 +8,7 @@ interface ConnectOnboardingProps {
 
 export function ConnectOnboarding({ userId }: ConnectOnboardingProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { toast } = useToast();ok i saved insert now what do i do for UPDATE policy. 
 
   const handleOnboarding = async () => {
     try {

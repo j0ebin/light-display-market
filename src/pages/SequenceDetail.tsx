@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
@@ -16,6 +15,7 @@ const SequenceDetail: React.FC = () => {
   const [sequence, setSequence] = useState<SequenceDetailType | undefined>(undefined);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // For charity integration
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -35,71 +35,92 @@ const SequenceDetail: React.FC = () => {
   }, [id]);
   
   useEffect(() => {
-    if (id) {
-      // For IDs that look like they're generated from song titles (from DisplayYearContent)
-      const isFromDisplayHistory = id.length === 8 && !id.includes('-');
-      
-      let sequenceData;
-      
-      if (isFromDisplayHistory) {
-        // Create a mock sequence data for display history songs
-        sequenceData = {
-          id: id,
-          title: 'Holiday Light Sequence',
-          displayName: 'Winter Wonderland Symphony',
-          displayId: 1, // Link back to the original display
-          imageUrl: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
-          price: 19.99,
-          rating: 4.8,
-          review_rating: 4.8,
-          downloads: 156,
-          software: 'xLights',
-          song: {
-            title: 'Carol of the Bells', // This would be dynamic in a real app
-            artist: 'Trans-Siberian Orchestra',
-            genre: 'Rock',
-            yearIntroduced: 2021 // The year it was introduced to the display
-          },
-          videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-          description: 'This sequence was created for the Winter Wonderland Symphony display in 2021. It features over 15,000 lights synchronized to Carol of the Bells by Trans-Siberian Orchestra.',
-          createdAt: 'December 15, 2021',
-          creator: {
-            id: 'user-1',
-            name: 'John Johnson',
-            avatar: 'https://i.pravatar.cc/150?img=1',
-            rating: 4.9,
-            sequencesCount: 12,
-            joinedDate: 'November 2021'
-          },
-          display: {
-            id: '1',
-            title: 'Winter Wonderland Symphony',
-            location: 'Seattle, WA',
-            schedule: 'Nov 25 - Jan 5 • 5-10pm',
-            rating: 4.9
-          },
-          seller: {
-            id: 'user-1',
-            name: 'John Johnson',
-            avatar: 'https://i.pravatar.cc/150?img=1',
-            rating: 4.9,
-            sequencesCount: 12,
-            joinedDate: 'November 2021'
+    const loadSequence = async () => {
+      if (id) {
+        setIsLoading(true);
+        setError(null);
+        console.log('Loading sequence with ID:', id);
+        
+        try {
+          // For IDs that look like they're generated from song titles (from DisplayYearContent)
+          const isFromDisplayHistory = id.length === 8 && !id.includes('-');
+          console.log('Is from display history?', isFromDisplayHistory);
+          
+          let sequenceData;
+          
+          if (isFromDisplayHistory) {
+            console.log('Creating synthetic sequence for display history');
+            // Create a mock sequence data for display history songs
+            sequenceData = {
+              id: id,
+              title: 'Holiday Light Sequence',
+              displayName: 'Winter Wonderland Symphony',
+              displayId: 1, // Link back to the original display
+              imageUrl: 'https://images.unsplash.com/photo-1606946184955-a8cb11e66336?q=80&w=1080',
+              price: 19.99,
+              rating: 4.8,
+              review_rating: 4.8,
+              downloads: 156,
+              software: 'xLights',
+              song: {
+                title: 'Carol of the Bells', // This would be dynamic in a real app
+                artist: 'Trans-Siberian Orchestra',
+                genre: 'Rock'
+              },
+              videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+              description: 'This sequence was created for the Winter Wonderland Symphony display in 2021. It features over 15,000 lights synchronized to Carol of the Bells by Trans-Siberian Orchestra.',
+              createdAt: 'December 15, 2021',
+              creatorName: 'John Johnson',
+              creatorAvatar: 'https://i.pravatar.cc/150?img=1',
+              creator: {
+                id: 'user-1',
+                name: 'John Johnson',
+                avatar: 'https://i.pravatar.cc/150?img=1',
+                rating: 4.9,
+                sequencesCount: 12,
+                joinedDate: 'November 2021'
+              },
+              display: {
+                id: '1',
+                title: 'Winter Wonderland Symphony',
+                location: 'Seattle, WA',
+                schedule: 'Nov 25 - Jan 5 • 5-10pm',
+                rating: 4.9
+              },
+              seller: {
+                id: 'user-1',
+                name: 'John Johnson',
+                avatar: 'https://i.pravatar.cc/150?img=1',
+                rating: 4.9,
+                sequencesCount: 12,
+                joinedDate: 'November 2021'
+              }
+            };
+          } else {
+            console.log('Fetching sequence details');
+            sequenceData = await getSequenceDetails(id);
           }
-        };
-      } else {
-        sequenceData = getSequenceDetails(id);
+          
+          console.log('Sequence data:', sequenceData);
+          
+          if (!sequenceData) {
+            throw new Error('Sequence not found');
+          }
+          
+          setSequence(sequenceData);
+          
+          // In a real implementation, we would get the owner's ID from the sequence data
+          setOwnerId('1'); // Mock owner ID for testing
+        } catch (err) {
+          console.error('Error loading sequence:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load sequence');
+        } finally {
+          setIsLoading(false);
+        }
       }
-      
-      setSequence(sequenceData);
-      
-      if (sequenceData) {
-        // In a real implementation, we would get the owner's ID from the sequence data
-        setOwnerId('1'); // Mock owner ID for testing
-      }
-      
-      setIsLoading(false);
-    }
+    };
+    
+    loadSequence();
   }, [id]);
   
   if (isLoading || isCheckingPurchase) {
@@ -114,12 +135,12 @@ const SequenceDetail: React.FC = () => {
     );
   }
   
-  if (!sequence) {
+  if (error || !sequence) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
-        <main className="flex-grow">
-          <SequenceDetailHeader title="" />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-xl text-red-600">{error || 'Sequence not found'}</div>
         </main>
         <Footer />
       </div>
