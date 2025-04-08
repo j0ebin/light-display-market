@@ -26,19 +26,26 @@ import { supabase } from '@/lib/supabase';
 import RatingTest from './components/test/RatingTest';
 
 function App() {
+  console.log('App component rendering');
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
+  const [initStatus, setInitStatus] = useState<string>('Starting initialization...');
 
   // Initialize app and check Supabase connection
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        setInitStatus('Checking environment variables...');
         console.log('Checking Supabase environment variables...');
-        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-          throw new Error('Missing Supabase environment variables. Check your .env file.');
+        if (!import.meta.env.VITE_SUPABASE_URL) {
+          throw new Error('Missing VITE_SUPABASE_URL environment variable');
+        }
+        if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
         }
         
-        console.log('Initializing app...');
+        setInitStatus('Testing Supabase connection...');
+        console.log('Testing Supabase connection...');
         
         // Test Supabase connection
         const { data, error } = await supabase.from('displays').select('count').single();
@@ -48,6 +55,7 @@ function App() {
         }
         console.log('Supabase connection successful');
 
+        setInitStatus('Initializing dummy data...');
         // Initialize dummy data
         await initDummyData();
         console.log('App initialization complete');
@@ -55,9 +63,11 @@ function App() {
         setIsInitialized(true);
       } catch (error) {
         console.error('App initialization failed:', error);
-        setInitError(error instanceof Error ? error : new Error('Unknown initialization error'));
+        const errorMessage = error instanceof Error ? error.message : 'Unknown initialization error';
+        console.error('Detailed error:', errorMessage);
+        setInitError(error instanceof Error ? error : new Error(errorMessage));
         toast.error('Failed to initialize application', {
-          description: error instanceof Error ? error.message : 'Unknown error occurred'
+          description: errorMessage
         });
       }
     };
@@ -66,6 +76,7 @@ function App() {
   }, []);
 
   if (initError) {
+    console.log('Rendering error state:', initError.message);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
         <div className="max-w-md w-full space-y-6 text-center">
@@ -80,6 +91,12 @@ function App() {
                 <li>Your network connection</li>
               </ul>
             </div>
+            <pre className="bg-muted p-4 rounded-lg text-xs text-left overflow-auto">
+              {JSON.stringify({ 
+                url: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
+                key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+              }, null, 2)}
+            </pre>
           </div>
           <button
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
@@ -93,16 +110,19 @@ function App() {
   }
 
   if (!isInitialized) {
+    console.log('Rendering loading state:', initStatus);
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-lg font-medium">Initializing application...</p>
+          <p className="text-sm text-muted-foreground">{initStatus}</p>
         </div>
       </div>
     );
   }
 
+  console.log('Rendering main app content');
   return (
     <AuthProvider>
       <CartProvider>

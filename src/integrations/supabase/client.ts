@@ -6,8 +6,13 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Ensure environment variables are available
-if (typeof window !== 'undefined' && (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY)) {
-  console.error('Missing Supabase environment variables. Please check your .env file.');
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const error = new Error('Missing Supabase environment variables. Please check your .env file.');
+  console.error(error);
+  // Only throw in development to avoid exposing sensitive info in production
+  if (import.meta.env.DEV) {
+    throw error;
+  }
 }
 
 // Import the supabase client like this:
@@ -15,5 +20,12 @@ if (typeof window !== 'undefined' && (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY
 
 export const supabase = createClient<Database>(
   SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY || ''
+  SUPABASE_PUBLISHABLE_KEY || '',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
