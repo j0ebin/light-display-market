@@ -51,3 +51,5 @@ lerna-debug.log*
 # Stripe binary files
 stripe_*.tar.gz
 .env
+browser-tools-mcp/
+modelcontextprotocol/
