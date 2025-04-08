@@ -33,11 +33,17 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('Checking Supabase environment variables...');
+        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          throw new Error('Missing Supabase environment variables. Check your .env file.');
+        }
+        
         console.log('Initializing app...');
         
         // Test Supabase connection
         const { data, error } = await supabase.from('displays').select('count').single();
         if (error) {
+          console.error('Supabase error details:', error);
           throw new Error(`Supabase connection error: ${error.message}`);
         }
         console.log('Supabase connection successful');
@@ -61,16 +67,37 @@ function App() {
 
   if (initError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-4 text-center">
-          <h1 className="text-2xl font-bold text-red-600">Initialization Error</h1>
-          <p className="text-muted-foreground">{initError.message}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
+        <div className="max-w-md w-full space-y-6 text-center">
+          <h1 className="text-3xl font-bold text-red-600">Initialization Error</h1>
+          <div className="space-y-4">
+            <p className="text-lg font-medium">{initError.message}</p>
+            <div className="bg-muted p-4 rounded-lg text-sm text-left">
+              <p className="font-mono">Please check:</p>
+              <ul className="list-disc list-inside space-y-2 mt-2">
+                <li>Your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY</li>
+                <li>Your Supabase project is running</li>
+                <li>Your network connection</li>
+              </ul>
+            </div>
+          </div>
           <button
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             onClick={() => window.location.reload()}
           >
-            Retry
+            Retry Connection
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium">Initializing application...</p>
         </div>
       </div>
     );
