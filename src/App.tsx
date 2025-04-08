@@ -22,7 +22,7 @@ import { AuthCallback } from '@/components/auth/AuthCallback';
 import { initDummyData } from './utils/initDummyData';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase.ts';
 import RatingTest from './components/test/RatingTest';
 
 function App() {
