@@ -95,7 +95,6 @@ export const getSequenceDetails = async (id: string): Promise<SequenceDetail | u
       return {
         id,
         title: 'Premium Light Show',
-        displayName: 'Premium Light Show',
         description: 'A premium synchronized light show featuring stunning effects and professional choreography.',
         software: 'xLights',
         rating: 4.9,
@@ -118,7 +117,6 @@ export const getSequenceDetails = async (id: string): Promise<SequenceDetail | u
           schedule: 'Nov 25 - Jan 5 • 5-10pm',
           rating: 4.9
         },
-        displayName: 'Premium Light Display',
         displayId: 999,
         creatorName: 'Professional Light Artist',
         creatorAvatar: 'https://i.pravatar.cc/150?img=5',

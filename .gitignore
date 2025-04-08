@@ -40,6 +40,8 @@ lerna-debug.log*
 
 # MCP configuration with sensitive credentials
 .cursor/
+!.cursor/mcp.json.template
+!.cursor/.gitignore
 
 # Environment variables
 .env

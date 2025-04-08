@@ -1,22 +1,23 @@
 {
-  "name": "mcp-config",
-  "version": "1.0.0",
-  "description": "MCP Configuration with Browser Tools and Stripe",
-  "tools": {
-    "browser": {
-      "package": "@agentdeskai/browser-tools-mcp",
-      "version": "1.2.0"
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "YOUR_SUPABASE_CONNECTION_STRING"]
+    },
+    "browser-tools": {
+      "command": "npx",
+      "args": ["@agentdeskai/browser-tools-mcp@1.2.0"]
     },
     "stripe": {
-      "package": "@stripe/mcp",
-      "version": "latest",
-      "config": {
-        "tools": "all",
-        "api_key": "YOUR_STRIPE_API_KEY"
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp"],
+      "env": {
+        "STRIPE_API_KEY": "YOUR_STRIPE_API_KEY"
       }
     },
     "perplexity-ask": {
-      "command": "npx -y server-perplexity-ask",
+      "command": "npx",
+      "args": ["-y", "server-perplexity-ask"],
       "env": {
         "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY"
       }

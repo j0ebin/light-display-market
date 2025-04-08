@@ -17,7 +17,7 @@ import UserProfileForm, { ProfileFormValues } from '@/components/profile/UserPro
 import DisplayTab from '@/components/profile/DisplayTab';
 import SongsTab from '@/components/profile/SongsTab';
 import CharityTab from '@/components/profile/CharityTab';
-import EarningsDashboard from '@/components/profile/EarningsDashboard';
+import EarningsDashboard from '@/components/stripe/EarningsDashboard';
 
 const UserProfile = () => {
   const { user, isLoading } = useAuth();
