@@ -2,10 +2,10 @@ import { loadStripe } from '@stripe/stripe-js';
 import Stripe from 'stripe';
 
 // Initialize Stripe
-export const stripePromise = loadStripe(process.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+export const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 // Initialize Stripe server instance
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(import.meta.env.VITE_STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 });
 

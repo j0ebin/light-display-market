@@ -3,29 +3,29 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Ensure environment variables are available
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  const error = new Error('Missing Supabase environment variables. Please check your .env file.');
-  console.error(error);
-  // Only throw in development to avoid exposing sensitive info in production
-  if (import.meta.env.DEV) {
-    throw error;
-  }
+if (!SUPABASE_URL) {
+  throw new Error('VITE_SUPABASE_URL is not defined. Please check your environment variables.');
+}
+
+if (!SUPABASE_ANON_KEY) {
+  throw new Error('VITE_SUPABASE_ANON_KEY is not defined. Please check your environment variables.');
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY || '',
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storageKey: 'light-hunt-auth'
     }
   }
 );
