@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, MapPin, Heart } from 'lucide-react';
+import { Search, Menu, X, MapPin, Heart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthPopover from '@/components/auth/AuthPopover';
+import AuthDialog from '@/components/auth/AuthDialog';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { CartButton } from '@/components/cart/CartButton';
-import { ExpandingSearchBox } from '@/components/ExpandingSearchBox';
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(true); // Always start with true
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -45,9 +47,12 @@ const NavBar = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const handleSearch = (value: string) => {
-    if (value.trim()) {
-      navigate(`/search?q=${encodeURIComponent(value.trim())}`);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchOpen(false);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
     }
   };
 
@@ -99,13 +104,28 @@ const NavBar = () => {
 
         {/* Desktop Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <ExpandingSearchBox
-            placeholder="Search displays or sequences..."
-            onSearch={handleSearch}
-            collapsedWidth="40px"
-            expandedWidth="300px"
-            className="bg-background"
-          />
+          <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <Search size={18} />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Input 
+                    className="pl-10" 
+                    placeholder="Search displays or sequences..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <Button type="submit">Search</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Button 
             variant="outline" 
             size="icon" 
@@ -145,15 +165,6 @@ const NavBar = () => {
         )}
       >
         <nav className="flex flex-col space-y-6 text-lg font-medium">
-          <div className="flex flex-col space-y-4">
-            <ExpandingSearchBox
-              placeholder="Search displays or sequences..."
-              onSearch={handleSearch}
-              collapsedWidth="40px"
-              expandedWidth="100%"
-              className="bg-background"
-            />
-          </div>
           <Link 
             to="/displays" 
             className="flex items-center py-3 border-b border-border"
@@ -176,35 +187,62 @@ const NavBar = () => {
             Leaderboard
           </Link>
           
-          <div className="flex items-center justify-center py-2">
-            <CartButton />
-          </div>
-          
-          {user ? (
-            <div className="flex flex-col space-y-4 mt-4">
-              <Link
-                to="/profile"
-                className="flex items-center space-x-2 py-3 border-b border-border"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Profile
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 py-3 text-left text-destructive"
-              >
-                Sign Out
-              </button>
+          <div className="flex flex-col space-y-4 mt-8">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                setIsMobileMenuOpen(false);
+                setSearchQuery('');
+              }
+            }}>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Input 
+                    placeholder="Search..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button type="submit">Search</Button>
+              </div>
+            </form>
+            
+            <Button variant="outline" className="w-full justify-start" onClick={() => {
+              navigate('/displays');
+              setIsMobileMenuOpen(false);
+            }}>
+              <MapPin size={18} className="mr-2" /> Near Me
+            </Button>
+            <Button variant="outline" className="w-full justify-start" onClick={handleFavoriteClick}>
+              <Heart size={18} className="mr-2" /> Favorites
+            </Button>
+            
+            <div className="flex items-center justify-center py-2">
+              <CartButton />
             </div>
-          ) : (
-            <Link
-              to="/auth"
-              className="flex items-center space-x-2 py-3 mt-4"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign In
-            </Link>
-          )}
+            
+            {user ? (
+              <>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <User size={18} className="mr-2" /> Profile
+                  </Button>
+                </Link>
+                <Button 
+                  variant="default" 
+                  className="w-full mt-4"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={18} className="mr-2" /> Sign Out
+                </Button>
+              </>
+            ) : (
+              <AuthDialog triggerClassName="w-full mt-4" />
+            )}
+          </div>
         </nav>
       </div>
     </header>
