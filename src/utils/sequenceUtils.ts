@@ -118,7 +118,6 @@ export const getSequenceDetails = async (id: string): Promise<SequenceDetail | u
           schedule: 'Nov 25 - Jan 5 • 5-10pm',
           rating: 4.9
         },
-        displayName: 'Premium Light Display',
         displayId: 999,
         creatorName: 'Professional Light Artist',
         creatorAvatar: 'https://i.pravatar.cc/150?img=5',
@@ -197,7 +196,6 @@ const createSyntheticSequence = (id: string): SequenceDetail => {
       schedule: 'Nov 25 - Jan 5 • 5-10pm',
       rating: 4.9
     },
-    displayName: 'Winter Wonderland Symphony',
     displayId: 1,
     creator: {
       id: 'user-synthetic',
