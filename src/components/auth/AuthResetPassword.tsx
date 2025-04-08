@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { AuthView } from './AuthPopover';
+import { Loader2 } from 'lucide-react';
 
 // Form validation schema
 const formSchema = z.object({
@@ -65,10 +65,10 @@ const AuthResetPassword: React.FC<AuthResetPasswordProps> = ({ onViewChange, onS
 
   return (
     <div className="p-6">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">Reset Password</h3>
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-semibold tracking-tight mb-2">Reset Your Password</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your email address and we'll send you a link to reset your password
+          Don't worry, it happens! Enter your email and we'll send you instructions to reset your password.
         </p>
       </div>
       
@@ -96,7 +96,7 @@ const AuthResetPassword: React.FC<AuthResetPasswordProps> = ({ onViewChange, onS
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="Enter your email address" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,20 +104,28 @@ const AuthResetPassword: React.FC<AuthResetPasswordProps> = ({ onViewChange, onS
             />
             
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Sending reset link...' : 'Send Reset Link'}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => onViewChange('signIn')}
-            >
-              Back to Sign In
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Send Reset Instructions"
+              )}
             </Button>
           </form>
         </Form>
       )}
+
+      <div className="mt-6 text-center text-sm">
+        <p className="text-muted-foreground">
+          Remember your password?{" "}
+          <Button
+            variant="link"
+            className="p-0 text-primary"
+            onClick={() => onViewChange('signIn')}
+          >
+            Sign in
+          </Button>
+        </p>
+      </div>
     </div>
   );
 };

@@ -17,6 +17,7 @@ import { AuthView } from './AuthPopover';
 import { Separator } from '@/components/ui/separator';
 import { GoogleLogin } from '@/components/auth/GoogleLogin';
 import { FacebookLogin } from '@/components/auth/FacebookLogin';
+import { Sparkles, Upload } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -80,18 +81,33 @@ const AuthSignIn = ({ onViewChange, onSuccess }: AuthSignInProps) => {
   return (
     <div className="px-8 pb-8">
       <div className="mb-8 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight mb-2">Welcome back</h2>
+        <h2 className="text-2xl font-semibold tracking-tight mb-2">Welcome back!</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your email to sign in to your account
+          Sign in to continue your light display journey
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="col-span-1">
           <GoogleLogin />
         </div>
         <div className="col-span-1">
           <FacebookLogin />
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-8">
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-xs text-muted-foreground">Access your saved displays and sequences</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Upload className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-xs text-muted-foreground">Share your own light displays with the community</p>
         </div>
       </div>
 

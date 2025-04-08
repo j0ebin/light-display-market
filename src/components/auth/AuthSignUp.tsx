@@ -14,6 +14,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthView } from './AuthPopover';
+import { GoogleLogin } from '@/components/auth/GoogleLogin';
+import { FacebookLogin } from '@/components/auth/FacebookLogin';
+import { Palette, Users, Star } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -73,12 +76,43 @@ const AuthSignUp = ({ onViewChange, onSuccess }: AuthSignUpProps) => {
   return (
     <div className="px-8 pb-8">
       <div className="mb-8 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight mb-2">Create an account</h2>
+        <h2 className="text-2xl font-semibold tracking-tight mb-2">Join the Community</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your email below to create your account
+          Create your account to start designing amazing light displays
         </p>
       </div>
-      
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="col-span-1">
+          <GoogleLogin />
+        </div>
+        <div className="col-span-1">
+          <FacebookLogin />
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-8">
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Palette className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-xs text-muted-foreground">Design stunning light displays with our easy-to-use tools</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-xs text-muted-foreground">Connect with other light display enthusiasts</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Star className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-xs text-muted-foreground">Get inspired by featured displays from the community</p>
+        </div>
+      </div>
+
+      <div className="relative mb-8">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -144,6 +178,7 @@ const AuthSignUp = ({ onViewChange, onSuccess }: AuthSignUpProps) => {
           </Button>
         </form>
       </Form>
+      </div>
 
       <div className="mt-6 text-center text-sm">
         <span className="text-muted-foreground">Already have an account?</span>{' '}
