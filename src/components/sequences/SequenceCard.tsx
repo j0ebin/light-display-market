@@ -59,7 +59,7 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Container */}
+      {/* Album Cover Container */}
       <div className="aspect-video w-full overflow-hidden relative">
         {/* Initial blur overlay while image loads */}
         <div 
@@ -69,10 +69,10 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
           )}
         />
         
-        {/* Image with loading effect */}
+        {/* Album Cover with loading effect */}
         <img
-          src={sequence.imageUrl}
-          alt={sequence.song.title}
+          src={sequence.song.albumCoverUrl || sequence.imageUrl}
+          alt={`${sequence.song.title} album cover`}
           className={cn(
             "w-full h-full object-cover transition-all duration-700",
             isLoaded ? "scale-100 filter-none" : "scale-105 blur-sm",
@@ -82,7 +82,7 @@ const SequenceCard: React.FC<SequenceCardProps> = ({
           loading="lazy"
         />
         
-        {/* Play button overlay */}
+        {/* Play button overlay - links to sequence detail page */}
         <div className={cn(
           "absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300 z-20",
           isHovered ? "opacity-100" : "opacity-0"

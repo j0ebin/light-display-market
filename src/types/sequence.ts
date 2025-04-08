@@ -9,11 +9,7 @@ export interface Sequence {
   rating: number;
   downloads: number;
   software: string;
-  song: {
-    title: string;
-    artist: string;
-    genre?: string;
-  };
+  song: Song;
   creatorName: string;
   creatorAvatar: string;
   displayId?: string | number;
@@ -78,5 +74,5 @@ export interface Song {
   duration: string;
   year?: number;
   genre?: string;
-  albumCover?: string;
+  albumCoverUrl?: string;
 }
