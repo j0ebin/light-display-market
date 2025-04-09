@@ -9,7 +9,7 @@ import { mockSongsData } from '@/data/mockSongsData';
 import { Song } from '@/types/sequence';
 import { toast } from 'sonner';
 import { useCharity } from '@/hooks/useCharity';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import new components
 import UserProfileHeader from '@/components/profile/UserProfileHeader';

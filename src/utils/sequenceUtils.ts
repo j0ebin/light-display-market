@@ -1,7 +1,7 @@
 import { Sequence, SequenceDetail } from "@/types/sequence";
 import { mockSequences } from "@/data/mockSequences";
 import { getSongForSequence } from "@/data/mockSongsData";
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/integrations/supabase/client';
 
 // Get related sequences by display name
 export const getRelatedSequences = (currentId: string, displayName: string): Sequence[] => {
