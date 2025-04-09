@@ -173,9 +173,10 @@ interface Display {
 ## Environment Variables
 Essential environment variables for local development:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-DATABASE_URL=your_direct_connection_string
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_token
+VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_key
 ```
 
 ## Project Structure
