@@ -20,9 +20,9 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
-    "VITE_SUPABASE_URL": "@vite_supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@vite_supabase_anon_key",
-    "VITE_MAPBOX_ACCESS_TOKEN": "@vite_mapbox_access_token",
-    "VITE_STRIPE_PUBLISHABLE_KEY": "@vite_stripe_publishable_key"
+    "VITE_SUPABASE_URL": "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY": "VITE_SUPABASE_ANON_KEY",
+    "VITE_MAPBOX_ACCESS_TOKEN": "VITE_MAPBOX_ACCESS_TOKEN",
+    "VITE_STRIPE_PUBLISHABLE_KEY": "VITE_STRIPE_PUBLISHABLE_KEY"
   }
 } 
